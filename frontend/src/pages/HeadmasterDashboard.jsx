@@ -169,7 +169,7 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="bg-indigo-600 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center font-bold text-base lg:text-lg">
-                                {user.avatar}
+                                {user?.avatar}
                             </div>
                             <div>
                                 <p className="font-bold text-sm lg:text-lg">{user.name}</p>

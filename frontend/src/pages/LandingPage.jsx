@@ -6,6 +6,7 @@ import {
     Menu, X, Star, BookOpen, TrendingUp, Sparkles,
     ChevronRight, Award, Globe, Heart
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const LandingPage = ({ onEnter, data }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,7 +14,7 @@ export const LandingPage = ({ onEnter, data }) => {
     const [showRegister, setShowRegister] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "student" });
     const { publicEvents, announcements, testimonials, events } = data
-
+    const navigate = useNavigate()
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -64,7 +65,8 @@ export const LandingPage = ({ onEnter, data }) => {
                                 <motion.button
                                     whileHover={{ scale: 1.05, boxShadow: "0 20px 30px rgba(139, 92, 246, 0.3)" }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => setShowLogin(true)}
+                                    // onClick={() => setShowLogin(true)}
+                                    onClick={() => navigate("/login")}
                                     className="px-7 py-3 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-full shadow-xl font-bold text-sm tracking-wide relative overflow-hidden group"
                                 >
                                     <span className="relative z-10">Login</span>
