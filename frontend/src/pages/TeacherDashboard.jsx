@@ -11,66 +11,123 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
     BarChart, Bar
 } from "recharts";
-
-// MOCK USER
-const MOCK_USER = {
-    id: "t-1",
-    name: "Anil Sir",
-    avatar: "A",
-    subjects: ["Science", "Math"],
-};
-
-// === HARDCODED TEACHER TIMETABLE ===
-const HARDCODED_TEACHER_TIMETABLES = [
-    {
-        teacherId: "t-1",
-        schedule: {
-            Monday: [
-                { time: "09:00", subject: "Science", classId: "class-1A" },
-                { time: "10:00", subject: "Math", classId: "class-1A" },
-                { time: "11:00", subject: "Science", classId: "class-2A" },
-            ],
-            Tuesday: [
-                { time: "09:00", subject: "Math", classId: "class-2A" },
-                { time: "10:00", subject: "Science", classId: "class-1A" },
-            ],
-            Wednesday: [
-                { time: "09:00", subject: "Science", classId: "class-1A" },
-            ],
-            Thursday: [
-                { time: "10:00", subject: "Math", classId: "class-1A" },
-            ],
-            Friday: [
-                { time: "09:00", subject: "Science", classId: "class-2A" },
-            ],
-        },
-    },
-];
+import axiosInstance from "../config/axiosInstance"; // adjust path as needed
 
 export const TeacherDashboard = ({ data, handlers, onLogout }) => {
-    const user = MOCK_USER;
+    const user = { id: "t-1", name: "Anil Sir", avatar: "A", }; // Replace later with real logged-in user
 
-    const {
-        classes = [],
-        students = [],
-        announcements = [],
-        events = [],
-        exams = [],
-        examResults = [],
-        contactMessages = [],
-        attendance = [],
-    } = data;
+    // === Separate useState Hooks ===
+    const [classes, setClasses] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [examResults, setExamResults] = useState([]);
+    const [contactMessages, setContactMessages] = useState([]);
+    const [attendance, setAttendance] = useState([]);
+    const [teacherTimetables, setTeacherTimetables] = useState([]);
 
-    const teacherTimetables = data.teacherTimetables?.length
-        ? data.teacherTimetables
-        : HARDCODED_TEACHER_TIMETABLES;
+    // === Status States ===
+    const [loading, setLoading] = useState({
+        classes: false,
+        students: false,
+        announcements: false,
+        events: false,
+        exams: false,
+        examResults: false,
+        contact: false,
+        attendance: false,
+        timetable: false,
+    });
 
-    const {
-        addAnnouncement,
-        addEvent,
-        addContactMessage,
-        addProgress,
-    } = handlers;
+    const [error, setError] = useState({
+        classes: null,
+        students: null,
+        announcements: null,
+        events: null,
+        exams: null,
+        examResults: null,
+        contact: null,
+        attendance: null,
+        timetable: null,
+    });
+    // ====== UNIVERSAL FETCH FUNCTION ======
+    const fetchData = async (endpoint, setState, key) => {
+        setLoading((prev) => ({ ...prev, [key]: true }));
+        setError((prev) => ({ ...prev, [key]: null }));
+        try {
+            const res = await axiosInstance.get(endpoint);
+            setState(res.data || []);
+        } catch (err) {
+            console.error(`❌ Error fetching ${key}:`, err);
+            setError((prev) => ({
+                ...prev,
+                [key]: err.response?.data?.message || err.message,
+            }));
+        } finally {
+            setLoading((prev) => ({ ...prev, [key]: false }));
+        }
+    };
+
+    // ====== FETCH DATA ON MOUNT ======
+    useEffect(() => {
+        fetchData("/classes", setClasses, "classes");
+        fetchData("/students", setStudents, "students");
+        fetchData("/announcements", setAnnouncements, "announcements");
+        fetchData("/events", setEvents, "events");
+        fetchData("/exams", setExams, "exams");
+        fetchData("/exam-results", setExamResults, "examResults");
+        fetchData("/contact-messages", setContactMessages, "contact");
+        fetchData("/attendance", setAttendance, "attendance");
+        fetchData(`/timetables/${user.id}`, setTeacherTimetables, "timetable");
+    }, []);
+
+
+    // === HANDLER FUNCTIONS ===
+
+    // 🟢 Add Announcement
+    const handleAddAnnouncement = async (announcement) => {
+        try {
+            const { data } = await axiosInstance.post("/announcements", announcement);
+            setAnnouncements((prev) => [...prev, data]);
+            console.log("✅ Announcement created:", data);
+        } catch (error) {
+            console.error("❌ Failed to create announcement:", error.response?.data || error.message);
+        }
+    };
+
+    // 🟢 Add Event
+    const handleAddEvent = async (eventData) => {
+        try {
+            const { data } = await axiosInstance.post("/events", eventData);
+            setEvents((prev) => [...prev, data]);
+            console.log("✅ Event created:", data);
+        } catch (error) {
+            console.error("❌ Failed to create event:", error.response?.data || error.message);
+        }
+    };
+
+    // 🟢 Add Contact Message
+    const handleAddContactMessage = async (messageData) => {
+        try {
+            const { data } = await axiosInstance.post("/contact", messageData);
+            setContactMessages((prev) => [...prev, data]);
+            console.log("✅ Contact message sent:", data);
+        } catch (error) {
+            console.error("❌ Failed to send contact message:", error.response?.data || error.message);
+        }
+    };
+
+    // 🟢 Add Progress (exam result or student progress)
+    const handleAddProgress = async (progressData) => {
+        try {
+            const { data } = await axiosInstance.post("/progress", progressData);
+            setExamResults((prev) => [...prev, data]);
+            console.log("✅ Progress added:", data);
+        } catch (error) {
+            console.error("❌ Failed to add progress:", error.response?.data || error.message);
+        }
+    };
 
     const [activeTab, setActiveTab] = useState("overview");
     const [selectedClass, setSelectedClass] = useState(null);
@@ -305,7 +362,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                             ))}
                         </div>
                         <p className="text-xs mt-2 opacity-90">
-                            Subjects: {user.subjects.join(", ")}
+                            Subjects: {user?.subjects?.join(", ")}
                         </p>
                     </div>
                 </div>
@@ -767,8 +824,11 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
             {/* MODALS */}
             <Modal open={showAnnForm} title="Create Announcement" onClose={() => setShowAnnForm(false)}>
                 <AnnouncementForm
-                    onCreate={ann => {
-                        addAnnouncement({ ...ann, visibility: `class:${teacherClasses[0]?.id}` });
+                    onCreate={(ann) => {
+                        handleAddAnnouncement({
+                            ...ann,
+                            visibility: `class:${teacherClasses[0]?.id}`,
+                        });
                         setShowAnnForm(false);
                     }}
                     onClose={() => setShowAnnForm(false)}
@@ -777,8 +837,11 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
 
             <Modal open={showEventForm} title="Create Event" onClose={() => setShowEventForm(false)}>
                 <EventForm
-                    onCreate={ev => {
-                        addEvent({ ...ev, classId: teacherClasses[0]?.id });
+                    onCreate={(ev) => {
+                        handleAddEvent({
+                            ...ev,
+                            classId: teacherClasses[0]?.id,
+                        });
                         setShowEventForm(false);
                     }}
                     onClose={() => setShowEventForm(false)}
@@ -787,9 +850,8 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
 
             <Modal open={showContactForm} title="Send Message" onClose={() => setShowContactForm(false)}>
                 <AddContactMessageForm
-                    onCreate={msg => {
-                        addContactMessage({
-                            id: `m-${Date.now()}`,
+                    onCreate={(msg) => {
+                        handleAddContactMessage({
                             type: msg.type,
                             message: msg.message,
                             date: new Date().toLocaleDateString("en-GB"),
@@ -807,8 +869,11 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
             >
                 <AddProgressForm
                     student={selectedStudent}
-                    onAdd={progress => {
-                        addProgress({ ...progress, studentId: selectedStudent.id });
+                    onAdd={(progress) => {
+                        handleAddProgress({
+                            ...progress,
+                            studentId: selectedStudent.id,
+                        });
                         setShowProgress(false);
                     }}
                     onClose={() => setShowProgress(false)}

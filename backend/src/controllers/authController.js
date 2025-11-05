@@ -3,20 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const generateAccessToken = (id) => {
-  return jwt.sign(
-    { id },
-    process.env.JWT_SECRET || "your-super-secret-jwt-key-here-2025",
-    { expiresIn: "1h" }
-  ); // short-lived
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1h" }); // short-lived
 };
 
 const generateRefreshToken = (id) => {
-  return jwt.sign(
-    { id },
-    process.env.JWT_REFRESH_SECRET ||
-      "your-super-secret-refresht-key-here-2025",
-    { expiresIn: "7d" }
-  ); // long-lived
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" }); // long-lived
 };
 
 // 🧩 Login controller
