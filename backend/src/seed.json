@@ -50,7 +50,7 @@
       "name": "Suresh Rao",
       "email": "suresh@school.com",
       "password": "@Anil1234",
-      "role": "teacher"
+      "role": "class_teacher"
     }
   ],
 
@@ -267,5 +267,64 @@
       "role": "Alumni",
       "message": "Best school experience ever! Helped me grow academically and personally."
     }
-  ]
+  ],
+
+  "contactMessage":[
+  {
+    "_id": "672a7a2f1b2e2a0012345671",
+    "studentId": "672a7a2f1b2e2a0011111111",
+    "teacherId": "672a7a2f1b2e2a0022222222",
+    "type": "inquiry",
+    "message": "Can you please clarify the syllabus for the upcoming science exam?",
+    "status": "pending",
+    "date": "2025-11-01T10:30:00.000Z",
+    "createdAt": "2025-11-01T10:30:00.000Z",
+    "updatedAt": "2025-11-01T10:30:00.000Z"
+  },
+  {
+    "_id": "672a7a2f1b2e2a0012345672",
+    "studentId": "672a7a2f1b2e2a0011111112",
+    "teacherId": "672a7a2f1b2e2a0022222223",
+    "type": "complaint",
+    "message": "The classroom projector has not been working for the last week.",
+    "status": "read",
+    "date": "2025-10-29T09:15:00.000Z",
+    "createdAt": "2025-10-29T09:15:00.000Z",
+    "updatedAt": "2025-10-30T12:00:00.000Z"
+  },
+  {
+    "_id": "672a7a2f1b2e2a0012345673",
+    "studentId": "672a7a2f1b2e2a0011111113",
+    "teacherId": "672a7a2f1b2e2a0022222224",
+    "type": "feedback",
+    "message": "The new online portal is very helpful and easy to use.",
+    "status": "resolved",
+    "date": "2025-10-20T14:45:00.000Z",
+    "createdAt": "2025-10-20T14:45:00.000Z",
+    "updatedAt": "2025-10-25T10:00:00.000Z"
+  },
+  {
+    "_id": "672a7a2f1b2e2a0012345674",
+    "studentId": "672a7a2f1b2e2a0011111114",
+    "teacherId": "672a7a2f1b2e2a0022222225",
+    "type": "inquiry",
+    "message": "When will the annual sports event be scheduled?",
+    "status": "pending",
+    "date": "2025-11-02T08:00:00.000Z",
+    "createdAt": "2025-11-02T08:00:00.000Z",
+    "updatedAt": "2025-11-02T08:00:00.000Z"
+  },
+  {
+    "_id": "672a7a2f1b2e2a0012345675",
+    "studentId": "672a7a2f1b2e2a0011111115",
+    "teacherId": "672a7a2f1b2e2a0022222226",
+    "type": "complaint",
+    "message": "The water cooler on the second floor is leaking.",
+    "status": "resolved",
+    "date": "2025-10-27T07:30:00.000Z",
+    "createdAt": "2025-10-27T07:30:00.000Z",
+    "updatedAt": "2025-10-28T10:45:00.000Z"
+  }
+]
+
 }

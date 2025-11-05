@@ -11,12 +11,11 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
     BarChart, Bar
 } from "recharts";
-import axiosInstance from "../config/axiosInstance"; // adjust path as needed
+import axiosInstance from "../config/axiosInstance";
 
-export const TeacherDashboard = ({ data, handlers, onLogout }) => {
-    const user = { id: "t-1", name: "Anil Sir", avatar: "A", }; // Replace later with real logged-in user
-
-    // === Separate useState Hooks ===
+export const TeacherDashboard = ({ onLogout }) => {
+    // === State ===
+    const [user, setUser] = useState(null);
     const [classes, setClasses] = useState([]);
     const [students, setStudents] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
@@ -26,131 +25,72 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
     const [contactMessages, setContactMessages] = useState([]);
     const [attendance, setAttendance] = useState([]);
     const [teacherTimetables, setTeacherTimetables] = useState([]);
+    const [dashboardLoading, setDashboardLoading] = useState(true);
 
-    // === Status States ===
-    const [loading, setLoading] = useState({
-        classes: false,
-        students: false,
-        announcements: false,
-        events: false,
-        exams: false,
-        examResults: false,
-        contact: false,
-        attendance: false,
-        timetable: false,
-    });
-
-    const [error, setError] = useState({
-        classes: null,
-        students: null,
-        announcements: null,
-        events: null,
-        exams: null,
-        examResults: null,
-        contact: null,
-        attendance: null,
-        timetable: null,
-    });
-    // ====== UNIVERSAL FETCH FUNCTION ======
-    const fetchData = async (endpoint, setState, key) => {
-        setLoading((prev) => ({ ...prev, [key]: true }));
-        setError((prev) => ({ ...prev, [key]: null }));
-        try {
-            const res = await axiosInstance.get(endpoint);
-            setState(res.data || []);
-        } catch (err) {
-            console.error(`❌ Error fetching ${key}:`, err);
-            setError((prev) => ({
-                ...prev,
-                [key]: err.response?.data?.message || err.message,
-            }));
-        } finally {
-            setLoading((prev) => ({ ...prev, [key]: false }));
-        }
-    };
-
-    // ====== FETCH DATA ON MOUNT ======
-    useEffect(() => {
-        fetchData("/classes", setClasses, "classes");
-        fetchData("/students", setStudents, "students");
-        fetchData("/announcements", setAnnouncements, "announcements");
-        fetchData("/events", setEvents, "events");
-        fetchData("/exams", setExams, "exams");
-        fetchData("/exam-results", setExamResults, "examResults");
-        fetchData("/contact-messages", setContactMessages, "contact");
-        fetchData("/attendance", setAttendance, "attendance");
-        fetchData(`/timetables/${user.id}`, setTeacherTimetables, "timetable");
-    }, []);
-
-
-    // === HANDLER FUNCTIONS ===
-
-    // 🟢 Add Announcement
-    const handleAddAnnouncement = async (announcement) => {
-        try {
-            const { data } = await axiosInstance.post("/announcements", announcement);
-            setAnnouncements((prev) => [...prev, data]);
-            console.log("✅ Announcement created:", data);
-        } catch (error) {
-            console.error("❌ Failed to create announcement:", error.response?.data || error.message);
-        }
-    };
-
-    // 🟢 Add Event
-    const handleAddEvent = async (eventData) => {
-        try {
-            const { data } = await axiosInstance.post("/events", eventData);
-            setEvents((prev) => [...prev, data]);
-            console.log("✅ Event created:", data);
-        } catch (error) {
-            console.error("❌ Failed to create event:", error.response?.data || error.message);
-        }
-    };
-
-    // 🟢 Add Contact Message
-    const handleAddContactMessage = async (messageData) => {
-        try {
-            const { data } = await axiosInstance.post("/contact", messageData);
-            setContactMessages((prev) => [...prev, data]);
-            console.log("✅ Contact message sent:", data);
-        } catch (error) {
-            console.error("❌ Failed to send contact message:", error.response?.data || error.message);
-        }
-    };
-
-    // 🟢 Add Progress (exam result or student progress)
-    const handleAddProgress = async (progressData) => {
-        try {
-            const { data } = await axiosInstance.post("/progress", progressData);
-            setExamResults((prev) => [...prev, data]);
-            console.log("✅ Progress added:", data);
-        } catch (error) {
-            console.error("❌ Failed to add progress:", error.response?.data || error.message);
-        }
-    };
-
+    // UI States
     const [activeTab, setActiveTab] = useState("overview");
     const [selectedClass, setSelectedClass] = useState(null);
     const [attendanceView, setAttendanceView] = useState("monthly");
     const [selectedExam, setSelectedExam] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // Modals
     const [showAnnForm, setShowAnnForm] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
     const [showContactForm, setShowContactForm] = useState(false);
     const [showProgress, setShowProgress] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
-    // === Teacher's Assigned Classes ===
-    const teacherClasses = useMemo(() => {
-        return classes.filter(c => c.teacherId === user.id);
-    }, [classes, user.id]);
-
+    // === Fetch Dashboard Data ===
     useEffect(() => {
-        if (teacherClasses.length > 0 && !selectedClass) {
-            setSelectedClass(teacherClasses[0]);
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            setDashboardLoading(false);
+            return;
         }
-    }, [teacherClasses, selectedClass]);
+
+        const fetchDashboardData = async () => {
+            setDashboardLoading(true);
+            try {
+                const response = await axiosInstance.get(`/teachers/dashboard/${userId}`);
+                const data = response.data;
+
+                // Set User
+                setUser({
+                    id: data.teacher.id,
+                    name: data.teacher.name || "Teacher",
+                    email: data.teacher.email,
+                    phone: data.teacher.phone,
+                    subjects: data.teacher.subjects || [],
+                    avatar: data.teacher.name?.charAt(0)?.toUpperCase() || "T"
+                });
+
+                // Set Data
+                setClasses(data.classes || []);
+                setStudents(data.students || []);
+                setAnnouncements(data.announcements || []);
+                setEvents(data.events || []);
+                setExams(data.exams || []);
+                setExamResults(data.examResults || []);
+                setContactMessages(data.contactMessages || []);
+                setAttendance(Object.values(data?.attendance || {}).flat());
+                setTeacherTimetables(data.timetable ? [data.timetable] : []);
+
+                console.log("Dashboard data loaded successfully");
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setDashboardLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    // === Derived Data ===
+    const teacherClasses = useMemo(() => {
+        return classes.filter(c => c.teacherId === user?.id);
+    }, [classes, user?.id]);
 
     const classStudents = useMemo(() => {
         if (!selectedClass) return [];
@@ -191,8 +131,16 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
             color: k === "complaint" ? "#ef4444" : k === "inquiry" ? "#3b82f6" : "#10b981",
         }));
 
+    // Auto-select first class
+    useEffect(() => {
+        if (teacherClasses.length > 0 && !selectedClass) {
+            setSelectedClass(teacherClasses[0]);
+        }
+    }, [teacherClasses, selectedClass]);
+
+    // === Timetable Renderer ===
     const renderTeacherTimetable = () => {
-        const teacherSchedule = teacherTimetables.find(tt => tt.teacherId === user.id);
+        const teacherSchedule = teacherTimetables.find(tt => tt.teacherId === user?.id);
         if (!teacherSchedule) {
             return <p className="text-gray-500 italic">No schedule assigned.</p>;
         }
@@ -252,6 +200,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
         );
     };
 
+    // === Attendance Data ===
     const attendanceData = useMemo(() => {
         if (!selectedClass) return [];
 
@@ -262,7 +211,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
             return records
                 .map(a => ({
                     date: a.date.split("-").slice(1).join("/"),
-                    attendance: Math.round((a.present / a.total) * 100),
+                    attendance: a.total > 0 ? Math.round((a.present / a.total) * 100) : 0,
                 }))
                 .sort((a, b) => a.date.localeCompare(b.date));
         }
@@ -278,11 +227,12 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
         return Array.from(map.entries())
             .map(([month, d]) => ({
                 month: new Date(month + "-01").toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
-                attendance: Math.round((d.present / d.total) * 100),
+                attendance: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0,
             }))
             .sort((a, b) => a.month.localeCompare(b.month));
     }, [selectedClass, attendance, attendanceView]);
 
+    // === Exam Marks Data ===
     const examMarksData = useMemo(() => {
         if (!selectedClass || !selectedExam) return [];
 
@@ -312,8 +262,46 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
         return exams.filter(ex => ex.classId === selectedClass.id);
     }, [selectedClass, exams]);
 
+    // === Handlers ===
+    const handleAddAnnouncement = async (announcement) => {
+        try {
+            const { data } = await axiosInstance.post("/announcements", announcement);
+            setAnnouncements(prev => [...prev, data]);
+        } catch (error) {
+            console.error("Failed to create announcement:", error);
+        }
+    };
+
+    const handleAddEvent = async (eventData) => {
+        try {
+            const { data } = await axiosInstance.post("/events", eventData);
+            setEvents(prev => [...prev, data]);
+        } catch (error) {
+            console.error("Failed to create event:", error);
+        }
+    };
+
+    const handleAddContactMessage = async (messageData) => {
+        try {
+            const { data } = await axiosInstance.post("/contact", messageData);
+            setContactMessages(prev => [...prev, data]);
+        } catch (error) {
+            console.error("Failed to send contact message:", error);
+        }
+    };
+
+    const handleAddProgress = async (progressData) => {
+        try {
+            const { data } = await axiosInstance.post("/progress", progressData);
+            setExamResults(prev => [...prev, data]);
+        } catch (error) {
+            console.error("Failed to add progress:", error);
+        }
+    };
+
     const closeSidebar = () => setIsSidebarOpen(false);
 
+    // === Render ===
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden">
             {/* Mobile Overlay */}
@@ -324,7 +312,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                 />
             )}
 
-            {/* Sidebar - Fixed */}
+            {/* Sidebar */}
             <aside className={`
                 fixed lg:static inset-y-0 left-0 z-50
                 w-72 bg-green-800 text-white
@@ -332,22 +320,19 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                 flex flex-col
             `}>
-                {/* Header - Fixed */}
+                {/* Header */}
                 <div className="p-4 lg:p-6 border-b border-green-700">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="bg-green-600 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center font-bold text-base lg:text-lg">
-                                {user.avatar}
+                                {user?.avatar || "T"}
                             </div>
                             <div>
-                                <p className="font-bold text-base lg:text-lg">{user.name}</p>
+                                <p className="font-bold text-base lg:text-lg">{user?.name || "Teacher"}</p>
                                 <p className="text-xs lg:text-sm opacity-90">Teacher</p>
                             </div>
                         </div>
-                        <button
-                            onClick={closeSidebar}
-                            className="lg:hidden text-white"
-                        >
+                        <button onClick={closeSidebar} className="lg:hidden text-white">
                             <X className="w-6 h-6" />
                         </button>
                     </div>
@@ -362,12 +347,12 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                             ))}
                         </div>
                         <p className="text-xs mt-2 opacity-90">
-                            Subjects: {user?.subjects?.join(", ")}
+                            Subjects: {user?.subjects?.join(", ") || "None"}
                         </p>
                     </div>
                 </div>
 
-                {/* Navigation - Scrollable */}
+                {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-1">
                     {[
                         { tab: "overview", label: "Overview" },
@@ -396,7 +381,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                     ))}
                 </nav>
 
-                {/* Logout - Fixed at bottom */}
+                {/* Logout */}
                 <div className="p-4 lg:p-6 border-t border-green-700">
                     <button
                         onClick={onLogout}
@@ -407,23 +392,24 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                 </div>
             </aside>
 
-            {/* Main Content - Scrollable */}
+            {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Mobile Header */}
                 <div className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between">
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="text-gray-700"
-                    >
+                    <button onClick={() => setIsSidebarOpen(true)} className="text-gray-700">
                         <Menu className="w-6 h-6" />
                     </button>
                     <h1 className="font-bold text-lg text-gray-800">Teacher Dashboard</h1>
-                    <div className="w-6" /> {/* Spacer for centering */}
+                    <div className="w-6" />
                 </div>
 
-                {/* Scrollable Content */}
+                {/* Content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-                    {!teacherClasses.length ? (
+                    {dashboardLoading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                        </div>
+                    ) : !teacherClasses.length ? (
                         <div className="text-center py-20">
                             <p className="text-lg lg:text-xl text-gray-600">No classes assigned.</p>
                         </div>
@@ -447,7 +433,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                             <p className="text-2xl lg:text-3xl font-bold text-blue-600">
                                                 {attendance.length > 0
                                                     ? Math.round(
-                                                        attendance.reduce((a, b) => a + (b.present / b.total), 0) / attendance.length * 100
+                                                        attendance.reduce((a, b) => a + (b.total > 0 ? b.present / b.total : 0), 0) / attendance.length * 100
                                                     )
                                                     : 0}%
                                             </p>
@@ -465,7 +451,6 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                     {/* Attendance Graph */}
                                     <div className="bg-white p-4 lg:p-6 rounded-xl shadow mb-6 lg:mb-8">
                                         <h3 className="text-lg lg:text-xl font-bold text-indigo-700 mb-4">Attendance Trend</h3>
-
                                         <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4">
                                             <select
                                                 value={selectedClass?.id || ""}
@@ -477,7 +462,6 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     <option key={c.id} value={c.id}>{c.name} {c.section}</option>
                                                 ))}
                                             </select>
-
                                             <select
                                                 value={attendanceView}
                                                 onChange={(e) => setAttendanceView(e.target.value)}
@@ -497,13 +481,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                                                     <Tooltip />
                                                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                                                    <Line
-                                                        type="monotone"
-                                                        dataKey="attendance"
-                                                        stroke="#10b981"
-                                                        name="Attendance %"
-                                                        strokeWidth={2}
-                                                    />
+                                                    <Line type="monotone" dataKey="attendance" stroke="#10b981" name="Attendance %" strokeWidth={2} />
                                                 </LineChart>
                                             </ResponsiveContainer>
                                         ) : selectedClass ? (
@@ -513,10 +491,9 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                         )}
                                     </div>
 
-                                    {/* Exam-wise Marks */}
+                                    {/* Exam Marks */}
                                     <div className="bg-white p-4 lg:p-6 rounded-xl shadow mb-6 lg:mb-8">
                                         <h3 className="text-lg lg:text-xl font-bold text-indigo-700 mb-4">Subject-wise Average Marks</h3>
-
                                         <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4">
                                             <select
                                                 value={selectedClass?.id || ""}
@@ -532,7 +509,6 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     <option key={c.id} value={c.id}>{c.name} {c.section}</option>
                                                 ))}
                                             </select>
-
                                             <select
                                                 value={selectedExam?.id || ""}
                                                 onChange={(e) => setSelectedExam(availableExams.find(ex => ex.id === e.target.value) || null)}
@@ -541,7 +517,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                             >
                                                 <option value="">Select Exam</option>
                                                 {availableExams.map(ex => (
-                                                    <option key={ex.id} value={ex.id}>{ex.title} ({ex.date})</option>
+                                                    <option key={ex.id} value={ex.id}>{ex.title} ({ex.date.split("T")[0]})</option>
                                                 ))}
                                             </select>
                                         </div>
@@ -580,7 +556,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     {upcomingEvents.map(e => (
                                                         <div key={e.id} className="border-l-4 border-green-500 pl-3">
                                                             <p className="font-medium text-sm lg:text-base">{e.title}</p>
-                                                            <p className="text-xs lg:text-sm text-gray-600">{e.date}</p>
+                                                            <p className="text-xs lg:text-sm text-gray-600">{e.date.split("T")[0]}</p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -601,7 +577,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     {classAnnouncements.slice(0, 3).map(a => (
                                                         <div key={a.id} className="border-l-4 border-yellow-500 pl-3">
                                                             <p className="font-medium text-sm lg:text-base">{a.title}</p>
-                                                            <p className="text-xs lg:text-sm text-gray-600">{a.date}</p>
+                                                            <p className="text-xs lg:text-sm text-gray-600">{a.date.split("T")[0]}</p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -625,7 +601,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     {contactMessages.slice(0, 3).map(m => (
                                                         <div key={m.id} className="border-l-4 border-purple-500 pl-3">
                                                             <p className="font-medium capitalize text-sm lg:text-base">{m.type}</p>
-                                                            <p className="text-xs text-gray-600">{m.date}</p>
+                                                            <p className="text-xs text-gray-600">{m.date.split("T")[0]}</p>
                                                             <p className="text-xs lg:text-sm text-gray-700 truncate">{m.message}</p>
                                                         </div>
                                                     ))}
@@ -699,8 +675,8 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                                     <div key={s.id} className="bg-white p-4 lg:p-5 rounded-lg shadow">
                                                         <p className="font-semibold text-base lg:text-lg">{s.name}</p>
                                                         <p className="text-sm text-gray-500">Roll: {s.roll}</p>
-                                                        <p className="text-sm mt-1">Attendance: {s.attendance}%</p>
-                                                        <p className="text-sm">Avg Score: {s.avgScore}%</p>
+                                                        <p className="text-sm mt-1">Attendance: {s.attendance || 0}%</p>
+                                                        <p className="text-sm">Avg Score: {s.avgScore || 0}%</p>
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedStudent(s);
@@ -744,7 +720,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                         {classAnnouncements.map(a => (
                                             <div key={a.id} className="bg-white p-4 lg:p-5 rounded-lg shadow">
                                                 <p className="font-bold text-base lg:text-lg">{a.title}</p>
-                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{a.date}</p>
+                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{a.date.split("T")[0]}</p>
                                                 <p className="mt-2 text-sm lg:text-base text-gray-700">{a.content}</p>
                                             </div>
                                         ))}
@@ -768,7 +744,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                         {classEvents.map(e => (
                                             <div key={e.id} className="bg-white p-4 lg:p-5 rounded-lg shadow">
                                                 <p className="font-bold text-base lg:text-lg">{e.title}</p>
-                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{e.date}</p>
+                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{e.date.split("T")[0]}</p>
                                                 <p className="mt-2 text-sm lg:text-base text-gray-700">{e.content}</p>
                                             </div>
                                         ))}
@@ -786,7 +762,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                             .map(ex => (
                                                 <div key={ex.id} className="bg-white p-4 lg:p-5 rounded-lg shadow">
                                                     <p className="font-bold text-base lg:text-lg">{ex.title}</p>
-                                                    <p className="text-xs lg:text-sm text-gray-500 mt-1">{ex.date} at {ex.time}</p>
+                                                    <p className="text-xs lg:text-sm text-gray-500 mt-1">{ex.date.split("T")[0]} at {ex.time}</p>
                                                 </div>
                                             ))}
                                     </div>
@@ -809,7 +785,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                                         {contactMessages.map(m => (
                                             <div key={m.id} className="bg-white p-4 lg:p-5 rounded-lg shadow">
                                                 <p className="font-bold capitalize text-base lg:text-lg">{m.type}</p>
-                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{m.date}</p>
+                                                <p className="text-xs lg:text-sm text-gray-500 mt-1">{m.date.split("T")[0]}</p>
                                                 <p className="mt-2 text-sm lg:text-base text-gray-700">{m.message}</p>
                                             </div>
                                         ))}
@@ -854,7 +830,7 @@ export const TeacherDashboard = ({ data, handlers, onLogout }) => {
                         handleAddContactMessage({
                             type: msg.type,
                             message: msg.message,
-                            date: new Date().toLocaleDateString("en-GB"),
+                            date: new Date().toISOString(),
                         });
                         setShowContactForm(false);
                     }}

@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
+import userRoutes from "./routes/user.js";
 import authRoutes from "./routes/auth.js";
 import classRoutes from "./routes/classes.js";
 import teacherRoutes from "./routes/teachers.js";
@@ -14,7 +14,7 @@ import attendanceRoutes from "./routes/attendance.js";
 import examRoutes from "./routes/exams.js";
 import progressRoutes from "./routes/progress.js";
 import connectDB from "./config/db.js";
-
+import studentDashboardRoutes from "./routes/studentRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -24,6 +24,7 @@ connectDB();
 
 // Routes
 app.use("/api", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/announcements", announcementRoutes);
@@ -34,6 +35,7 @@ app.use("/api/timetables", timetableRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/students/dashboard", studentDashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

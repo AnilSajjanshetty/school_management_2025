@@ -5,7 +5,7 @@ import { Menu, X, Bell, Calendar, MessageSquare, BookOpen, Award, Clock, Chevron
 import axiosInstance from "../config/axiosInstance";
 const classesName = (classId, classes = []) => classes.find(c => c.id === classId)?.name || '-';
 
-export const StudentDashboard = ({ user, onLogout }) => {
+export const StudentDashboard = ({ onLogout }) => {
     // === State for data ===
     const [students, setStudents] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
@@ -15,49 +15,78 @@ export const StudentDashboard = ({ user, onLogout }) => {
     const [events, setEvents] = useState([]);
     const [contactMessages, setContactMessages] = useState([]);
     const [attendance, setAttendance] = useState([])
+    const [user, setUser] = useState([])
+
 
     // === UI State ===
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("overview");
     const [showMessageForm, setShowMessageForm] = useState(false);
 
-    // === Fetch all data with axiosInstance ===
+    // // === Fetch all data with axiosInstance ===
+    // useEffect(() => {
+    //     const userId = localStorage.getItem("userId")
+    //     const fetchAllData = async () => {
+    //         try {
+    //             const [
+    //                 userRes,
+    //                 studentsRes,
+    //                 announcementsRes,
+    //                 examsRes,
+    //                 timetablesRes,
+    //                 classesRes,
+    //                 eventsRes,
+    //                 contactMessagesRes,
+    //             ] = await Promise.all([
+    //                 axiosInstance.get(`/users/${userId}`),
+    //                 axiosInstance.get("/students"),
+    //                 axiosInstance.get("/announcements"),
+    //                 axiosInstance.get("/exams"),
+    //                 axiosInstance.get("/timetables"),
+    //                 axiosInstance.get("/classes"),
+    //                 axiosInstance.get("/events"),
+    //                 axiosInstance.get("/contact-messages"),
+    //             ]);
+    //             setUser(userRes.data)
+    //             setStudents(studentsRes.data);
+    //             setAnnouncements(announcementsRes.data);
+    //             setExams(examsRes.data);
+    //             setTimetables(timetablesRes.data);
+    //             setClasses(classesRes.data);
+    //             setEvents(eventsRes.data);
+    //             setContactMessages(contactMessagesRes.data);
+    //         } catch (error) {
+    //             console.error("❌ Error fetching student dashboard data:", error);
+    //         }
+    //     };
+
+    //     fetchAllData();
+    // }, []);
+
+
+    // src/pages/StudentDashboard.jsx
     useEffect(() => {
+        const userId = localStorage.getItem("userId");
         const fetchAllData = async () => {
             try {
-                const [
-                    studentsRes,
-                    announcementsRes,
-                    examsRes,
-                    timetablesRes,
-                    classesRes,
-                    eventsRes,
-                    contactMessagesRes,
-                ] = await Promise.all([
-                    axiosInstance.get("/students"),
-                    axiosInstance.get("/announcements"),
-                    axiosInstance.get("/exams"),
-                    axiosInstance.get("/timetables"),
-                    axiosInstance.get("/classes"),
-                    axiosInstance.get("/events"),
-                    axiosInstance.get("/contact-messages"),
-                ]);
+                // Single endpoint for all dashboard data
+                const response = await axiosInstance.get(`/students/dashboard/${userId}`);
+                const data = response.data;
 
-                setStudents(studentsRes.data);
-                setAnnouncements(announcementsRes.data);
-                setExams(examsRes.data);
-                setTimetables(timetablesRes.data);
-                setClasses(classesRes.data);
-                setEvents(eventsRes.data);
-                setContactMessages(contactMessagesRes.data);
+                setUser({ studentId: data.student.id });
+                setStudents([data.student]);
+                setTimetables([data.timetable]);
+                setAnnouncements(data.announcements);
+                setEvents(data.events);
+                setExams(data.exams);
+                setClasses([{ id: data.student.classId, name: data.student.className }]);
             } catch (error) {
-                console.error("❌ Error fetching student dashboard data:", error);
+                console.error("❌ Error fetching dashboard data:", error);
             }
         };
 
         fetchAllData();
     }, []);
-
     // === Derived data ===
     const student = students.find((s) => s.id === user?.studentId) || students[0];
     const timetable = timetables.find((t) => t.classId === student?.classId);
