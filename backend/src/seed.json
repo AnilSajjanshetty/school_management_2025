@@ -1,165 +1,271 @@
 {
   "users": [
     {
-      "name": "Headmaster Rajesh Kumar",
-      "email": "head@brightpath.com",
-      "password": "123456",
-      "role": "headmaster"
+      "_id": "6730a5f2c5f8a1b001000001",
+      "name": "Principal Sharma",
+      "email": "principal@school.com",
+      "password": "@Anil1234",
+      "role": "headmaster",
+      "phone": "9876543210",
+      "address": "Main Building Office"
     },
     {
-      "name": "Ms. Anita Sharma",
-      "email": "anita@brightpath.com",
-      "password": "123456",
-      "role": "class_teacher"
+      "_id": "6730a5f2c5f8a1b001000002",
+      "name": "Ravi Kumar",
+      "email": "ravi@school.com",
+      "password": "@Anil1234",
+      "role": "teacher",
+      "phone": "9876500000"
     },
     {
-      "name": "Mr. Vikram Singh",
-      "email": "vikram@brightpath.com",
-      "password": "123456",
+      "_id": "6730a5f2c5f8a1b001000003",
+      "name": "Priya Singh",
+      "email": "priya@school.com",
+      "password": "@Anil1234",
+      "role": "student"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000004",
+      "name": "Arjun Mehta",
+      "email": "arjun@school.com",
+      "password": "@Anil1234",
       "role": "teacher"
     },
     {
-      "name": "Priya Sharma",
-      "email": "priya@brightpath.com",
-      "password": "123456",
+      "_id": "6730a5f2c5f8a1b001000005",
+      "name": "Neha Gupta",
+      "email": "neha@school.com",
+      "password": "@Anil1234",
       "role": "student"
     },
     {
-      "name": "Rohan Patel",
-      "email": "rohan@brightpath.com",
-      "password": "123456",
-      "role": "student"
+      "_id": "6730a5f2c5f8a1b001000006",
+      "name": "Admin User",
+      "email": "admin@school.com",
+      "password": "@Anil1234",
+      "role": "admin"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000007",
+      "name": "Suresh Rao",
+      "email": "suresh@school.com",
+      "password": "@Anil1234",
+      "role": "teacher"
+    }
+  ],
+
+  "subjects": [
+    { "_id": "6730a6f2c5f8a1b002000001", "name": "Mathematics", "code": "MATH101" },
+    { "_id": "6730a6f2c5f8a1b002000002", "name": "Science", "code": "SCI102" },
+    { "_id": "6730a6f2c5f8a1b002000003", "name": "English", "code": "ENG103" },
+    { "_id": "6730a6f2c5f8a1b002000004", "name": "Social Studies", "code": "SST104" },
+    { "_id": "6730a6f2c5f8a1b002000005", "name": "Computer Science", "code": "CSC105" }
+  ],
+
+  "teachers": [
+    {
+      "_id": "6730a7f2c5f8a1b003000001",
+      "userId": "6730a5f2c5f8a1b001000002",
+      "subjects": ["6730a6f2c5f8a1b002000001", "6730a6f2c5f8a1b002000002"]
+    },
+    {
+      "_id": "6730a7f2c5f8a1b003000002",
+      "userId": "6730a5f2c5f8a1b001000004",
+      "subjects": ["6730a6f2c5f8a1b002000003", "6730a6f2c5f8a1b002000005"]
+    },
+    {
+      "_id": "6730a7f2c5f8a1b003000003",
+      "userId": "6730a5f2c5f8a1b001000007",
+      "subjects": ["6730a6f2c5f8a1b002000004"]
     }
   ],
 
   "classes": [
-    { "name": "Class 10", "section": "A" },
-    { "name": "Class 10", "section": "B" },
-    { "name": "Class 9", "section": "A" }
-  ],
-
-  "teachers": [
-    { "name": "Ms. Anita Sharma", "subjects": ["Mathematics", "Science"] },
-    { "name": "Mr. Vikram Singh", "subjects": ["English", "Social Studies"] },
-    { "name": "Mrs. Neha Gupta", "subjects": ["Hindi", "Sanskrit"] }
+    {
+      "_id": "6730a8f2c5f8a1b004000001",
+      "name": "10th Grade",
+      "section": "A",
+      "classTeacherId": "6730a7f2c5f8a1b003000001",
+      "subjects": ["6730a6f2c5f8a1b002000001", "6730a6f2c5f8a1b002000002", "6730a6f2c5f8a1b002000003"]
+    },
+    {
+      "_id": "6730a8f2c5f8a1b004000002",
+      "name": "9th Grade",
+      "section": "B",
+      "classTeacherId": "6730a7f2c5f8a1b003000002",
+      "subjects": ["6730a6f2c5f8a1b002000003", "6730a6f2c5f8a1b002000004"]
+    }
   ],
 
   "students": [
-    { "name": "Priya Sharma" },
-    { "name": "Rohan Patel" },
-    { "name": "Aisha Khan" },
-    { "name": "Arjun Mehta" },
-    { "name": "Sanya Reddy" }
-  ],
-
-  "announcements": [
     {
-      "title": "Parent-Teacher Meeting",
-      "content": "PTM on 15th Nov, 9 AM - 1 PM.",
-      "date": "2025-11-10T10:00:00Z",
-      "visibility": "public"
+      "_id": "6730a9f2c5f8a1b005000001",
+      "userId": "6730a5f2c5f8a1b001000003",
+      "classId": "6730a8f2c5f8a1b004000001",
+      "rollNumber": 1
     },
     {
-      "title": "Diwali Holiday",
-      "content": "School closed on 5th Nov.",
-      "date": "2025-11-03T08:00:00Z",
-      "visibility": "public"
-    }
-  ],
-
-  "events": [
-    {
-      "title": "Annual Sports Day",
-      "content": "Races, games, and prizes!",
-      "date": "2025-12-20T09:00:00Z",
-      "public": true
-    },
-    {
-      "title": "Science Exhibition",
-      "content": "Student projects showcase.",
-      "date": "2025-11-25T10:00:00Z",
-      "public": true
-    }
-  ],
-
-  "testimonials": [
-    {
-      "author": "Mrs. Sharma",
-      "content": "Excellent faculty and infrastructure!",
-      "public": true
-    },
-    {
-      "author": "Mr. Patel",
-      "content": "My daughter has grown tremendously.",
-      "public": true
+      "_id": "6730a9f2c5f8a1b005000002",
+      "userId": "6730a5f2c5f8a1b001000005",
+      "classId": "6730a8f2c5f8a1b004000002",
+      "rollNumber": 2
     }
   ],
 
   "timetables": [
     {
+      "_id": "6730aaf2c5f8a1b006000001",
+      "classId": "6730a8f2c5f8a1b004000001",
       "day": "Monday",
       "period": 1,
-      "subject": "Mathematics",
+      "subjectId": "6730a6f2c5f8a1b002000001",
+      "teacherId": "6730a7f2c5f8a1b003000001",
       "startTime": "09:00 AM",
       "endTime": "09:45 AM",
       "room": "Room 101"
     },
     {
+      "_id": "6730aaf2c5f8a1b006000002",
+      "classId": "6730a8f2c5f8a1b004000001",
       "day": "Monday",
       "period": 2,
-      "subject": "Science",
-      "startTime": "09:45 AM",
-      "endTime": "10:30 AM",
-      "room": "Lab 1"
-    }
-  ],
-
-  "attendance": [
-    {
-      "date": "2025-11-03T00:00:00Z",
-      "status": "present",
-      "notes": ""
+      "subjectId": "6730a6f2c5f8a1b002000002",
+      "teacherId": "6730a7f2c5f8a1b003000001",
+      "startTime": "10:00 AM",
+      "endTime": "10:45 AM",
+      "room": "Room 102"
     },
     {
-      "date": "2025-11-03T00:00:00Z",
-      "status": "absent",
-      "notes": "Sick"
+      "_id": "6730aaf2c5f8a1b006000003",
+      "classId": "6730a8f2c5f8a1b004000002",
+      "day": "Tuesday",
+      "period": 1,
+      "subjectId": "6730a6f2c5f8a1b002000004",
+      "teacherId": "6730a7f2c5f8a1b003000003",
+      "startTime": "09:00 AM",
+      "endTime": "09:45 AM",
+      "room": "Room 103"
     }
   ],
 
   "exams": [
     {
-      "title": "Math Midterm",
+      "_id": "6730abf2c5f8a1b007000001",
+      "title": "Mid Term Math Exam",
+      "classId": "6730a8f2c5f8a1b004000001",
       "subject": "Mathematics",
-      "date": "2025-11-15T10:00:00Z",
-      "duration": 120,
-      "totalMarks": 100,
-      "room": "Hall A"
+      "date": "2025-11-15T09:00:00.000Z",
+      "duration": 90,
+      "room": "Room 201",
+      "results": [
+        { "studentId": "6730a9f2c5f8a1b005000001", "marksObtained": 85, "grade": "A" }
+      ]
     },
     {
-      "title": "Science Unit Test",
+      "_id": "6730abf2c5f8a1b007000002",
+      "title": "Science Practical Exam",
+      "classId": "6730a8f2c5f8a1b004000001",
       "subject": "Science",
-      "date": "2025-11-20T11:00:00Z",
+      "date": "2025-12-01T09:00:00.000Z",
       "duration": 60,
-      "totalMarks": 50,
       "room": "Lab 1"
     }
   ],
 
+  "attendance": [
+  {
+    "studentId": "6730a9f2c5f8a1b005000001",
+    "classId": "6730a8f2c5f8a1b004000001",
+    "date": "2025-11-01T00:00:00.000Z",
+    "status": "present"
+  },
+  {
+    "studentId": "6730a9f2c5f8a1b005000001",
+    "classId": "6730a8f2c5f8a1b004000001",
+    "date": "2025-11-02T00:00:00.000Z",
+    "status": "absent"
+  },
+  {
+    "studentId": "6730a9f2c5f8a1b005000001",
+    "classId": "6730a8f2c5f8a1b004000001",
+    "date": "2025-11-03T00:00:00.000Z",
+    "status": "present"
+  }
+],
+
+
   "progress": [
     {
-      "subject": "Mathematics",
-      "type": "academic",
-      "score": 92,
-      "date": "2025-10-25T00:00:00Z",
-      "teacherComment": "Excellent in algebra!"
+      "_id": "6730adf2c5f8a1b009000001",
+      "studentId": "6730a9f2c5f8a1b005000001",
+      "classId": "6730a8f2c5f8a1b004000001",
+      "term": "Mid Term",
+      "type":"academic",
+      "marks": {
+        "Mathematics": 88,
+        "Science": 82,
+        "English": 91
+      },
+      "remarks": "Excellent performance"
     },
     {
-      "subject": "English",
-      "type": "academic",
-      "score": 78,
-      "date": "2025-10-28T00:00:00Z",
-      "teacherComment": "Focus on essays."
+      "_id": "6730adf2c5f8a1b009000002",
+      "studentId": "6730a9f2c5f8a1b005000002",
+      "classId": "6730a8f2c5f8a1b004000002",
+      "term": "Mid Term",
+      "type":"academic",
+      "marks": {
+        "English": 75,
+        "Social Studies": 69
+      },
+      "remarks": "Good effort, needs improvement in SST"
+    }
+  ],
+
+  "events": [
+    {
+      "_id": "6730aef2c5f8a1b010000001",
+      "title": "Annual Day Celebration",
+      "date": "2025-12-20",
+      "description": "School Annual Day with cultural programs and awards.",
+      "location": "School Auditorium"
+    },
+    {
+      "_id": "6730aef2c5f8a1b010000002",
+      "title": "Science Exhibition",
+      "date": "2025-11-25",
+      "description": "Students showcase science models and experiments.",
+      "location": "Lab Hall"
+    }
+  ],
+
+  "announcements": [
+    {
+      "_id": "6730aff2c5f8a1b011000001",
+      "title": "Winter Vacation Notice",
+      "message": "School will remain closed from Dec 25 to Jan 2 for winter break.",
+      "date": "2025-12-10"
+    },
+    {
+      "_id": "6730aff2c5f8a1b011000002",
+      "title": "Parent-Teacher Meeting",
+      "message": "PTM scheduled on Nov 18 for all classes.",
+      "date": "2025-11-10"
+    }
+  ],
+
+  "testimonials": [
+    {
+      "_id": "6730b0f2c5f8a1b012000001",
+      "name": "Rahul Verma",
+      "role": "Parent",
+      "message": "The teachers are dedicated and the environment is very supportive."
+    },
+    {
+      "_id": "6730b0f2c5f8a1b012000002",
+      "name": "Sneha Kapoor",
+      "role": "Alumni",
+      "message": "Best school experience ever! Helped me grow academically and personally."
     }
   ]
 }

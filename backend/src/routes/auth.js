@@ -1,9 +1,14 @@
 import express from "express";
-import { login, seedUsers } from "../controllers/authController.js";
+import {
+  login,
+  register,
+  refreshToken,
+} from "../controllers/authController.js";
 
 const router = express.Router();
 
 router.post("/login", login);
-router.post("/seed", seedUsers); // Dev only
+router.post("/register", register);
+router.post("/refresh-token", refreshToken);
 
 export default router;

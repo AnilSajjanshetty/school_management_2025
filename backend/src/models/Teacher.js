@@ -1,8 +1,15 @@
 import mongoose from "mongoose";
 
-const teacherSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  subjects: [String],
-});
+const teacherSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
+  },
+  { timestamps: true }
+);
 
 export default mongoose.model("Teacher", teacherSchema);

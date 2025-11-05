@@ -13,8 +13,8 @@ export const LandingPage = ({ onEnter, data }) => {
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "student" });
-    const { publicEvents, announcements, testimonials, events } = data
     const navigate = useNavigate()
+    const { publicEvents = [], announcements = [], testimonials = [], events = [] } = data || {};
 
     const handleSubmit = (e) => {
         e.preventDefault();

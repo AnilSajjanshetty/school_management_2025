@@ -1,4 +1,3 @@
-// Progress: Student academic/behavioral progress tracking
 import mongoose from "mongoose";
 
 const progressSchema = new mongoose.Schema(
@@ -8,22 +7,25 @@ const progressSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
+    subjectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
+    },
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
       required: true,
     },
-    subject: { type: String, required: true },
     type: {
       type: String,
       enum: ["academic", "behavioral", "attendance"],
       required: true,
     },
-    score: Number, // e.g., 85/100
+    score: Number,
     date: { type: Date, default: Date.now },
     teacherComment: String,
     parentComment: String,
-    goals: [String], // Next improvement goals
+    goals: [String],
   },
   { timestamps: true }
 );

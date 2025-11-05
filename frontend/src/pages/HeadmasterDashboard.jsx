@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Modal } from "../components/Modal";
 import { CreateClassForm } from "../components/Forms/CreateClassForm";
 import { AnnouncementForm } from "../components/Forms/AnnouncementForm";
@@ -10,38 +10,26 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { AddTeacherForm } from "../components/Forms/AddTeacherForm";
 import { AddStudentForm } from "../components/Forms/AddStudentForm";
 import { Menu, X } from "lucide-react";
+import axiosInstance from "../config/axiosInstance";
 
-export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
-    const {
-        classes = [],
-        students = [],
-        teachers = [],
-        attendance = [],
-        announcements = [],
-        events = [],
-        testimonials = [],
-        timetables = [],
-        exams = [],
-        examResults = [],
-        contactMessages = [],
-    } = data;
+export const HeadmasterDashboard = ({ onLogout }) => {
+    // ✅ Separate states for each dataset
+    const [classes, setClasses] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [teachers, setTeachers] = useState([]);
+    const [attendance, setAttendance] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [testimonials, setTestimonials] = useState([]);
+    const [timetables, setTimetables] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [examResults, setExamResults] = useState([]);
+    const [contactMessages, setContactMessages] = useState([]);
 
-    const {
-        addClass,
-        addStudentToClass,
-        addStudent,
-        addTeacher,
-        addAnnouncement,
-        addEvent,
-        addTestimonial,
-        createExam,
-        createTimetable,
-        removeTeacher,
-        removeStudent,
-        removeClass,
-        addContactMessage,
-    } = handlers;
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
+    // Sidebar & View States
     const [view, setView] = useState("overview");
     const [selectedClassId, setSelectedClassId] = useState(null);
     const [showAddClass, setShowAddClass] = useState(false);
@@ -53,24 +41,72 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
     const [showStudentForm, setShowStudentForm] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Graph States
+    // Graph-related States
     const [attendanceView, setAttendanceView] = useState("monthly");
-    const [selectedAttendanceClass, setSelectedAttendanceClass] = useState(classes[0]?.id || "");
-    const [selectedExamClass, setSelectedExamClass] = useState(classes[0]?.id || "");
+    const [selectedAttendanceClass, setSelectedAttendanceClass] = useState("");
+    const [selectedExamClass, setSelectedExamClass] = useState("");
     const [selectedExamId, setSelectedExamId] = useState("");
 
-    const classClick = (id) => {
-        setSelectedClassId(id);
-        setView("classDetail");
-        closeSidebar();
-    };
+    // ✅ Fetch all data with proper try/catch blocks
+    useEffect(() => {
+        const fetchAllData = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-    const closeSidebar = () => setIsSidebarOpen(false);
+                const [
+                    classRes,
+                    studentRes,
+                    teacherRes,
+                    attendanceRes,
+                    announcementRes,
+                    eventRes,
+                    testimonialRes,
+                    timetableRes,
+                    examRes,
+                    examResultRes,
+                    contactRes,
+                ] = await Promise.all([
+                    axiosInstance.get("/classes").catch(() => ({ data: [] })),
+                    axiosInstance.get("/students").catch(() => ({ data: [] })),
+                    axiosInstance.get("/teachers").catch(() => ({ data: [] })),
+                    axiosInstance.get("/attendance").catch(() => ({ data: [] })),
+                    axiosInstance.get("/announcements").catch(() => ({ data: [] })),
+                    axiosInstance.get("/events").catch(() => ({ data: [] })),
+                    axiosInstance.get("/testimonials").catch(() => ({ data: [] })),
+                    axiosInstance.get("/timetables").catch(() => ({ data: [] })),
+                    axiosInstance.get("/exams").catch(() => ({ data: [] })),
+                    axiosInstance.get("/progress").catch(() => ({ data: [] })),
+                    axiosInstance.get("/contact").catch(() => ({ data: [] })),
+                ]);
 
-    const selectedClass = classes.find((c) => c.id === selectedClassId);
-    const classStudents = students.filter((s) => s.classId === selectedClassId);
+                setClasses(classRes.data || []);
+                setStudents(studentRes.data || []);
+                setTeachers(teacherRes.data || []);
+                setAttendance(attendanceRes.data || []);
+                setAnnouncements(announcementRes.data || []);
+                setEvents(eventRes.data || []);
+                setTestimonials(testimonialRes.data || []);
+                setTimetables(timetableRes.data || []);
+                setExams(examRes.data || []);
+                setExamResults(examResultRes.data || []);
+                setContactMessages(contactRes.data || []);
 
-    // Upcoming Events
+                // Default class selections
+                setSelectedAttendanceClass(classRes.data?.[0]?._id || "");
+                setSelectedExamClass(classRes.data?.[0]?._id || "");
+            } catch (err) {
+                console.error("❌ Dashboard data load error:", err);
+                setError("Failed to load dashboard data. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAllData();
+    }, []);
+
+    // ✅ Computed Data
     const upcomingEvents = useMemo(() => {
         const today = new Date().toISOString().split("T")[0];
         return events
@@ -79,17 +115,19 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
             .slice(0, 3);
     }, [events]);
 
-    // Recent Announcements
+    const closeSidebar = () => setIsSidebarOpen(false);
+
     const recentAnnouncements = useMemo(() => {
         return [...announcements]
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 3);
     }, [announcements]);
 
-    // Contact Stats
     const contactStats = useMemo(() => {
         const stats = { feedback: 0, complaint: 0, inquiry: 0 };
-        contactMessages.forEach(m => stats[m.type]++);
+        contactMessages.forEach((m) => {
+            if (m.type && stats[m.type] !== undefined) stats[m.type]++;
+        });
         return stats;
     }, [contactMessages]);
 
@@ -98,13 +136,20 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
         .map(([k, v]) => ({
             name: k.charAt(0).toUpperCase() + k.slice(1),
             value: v,
-            color: k === "complaint" ? "#ef4444" : k === "inquiry" ? "#3b82f6" : "#10b981",
+            color:
+                k === "complaint"
+                    ? "#ef4444"
+                    : k === "inquiry"
+                        ? "#3b82f6"
+                        : "#10b981",
         }));
 
-    // Attendance Data
+    // ✅ Attendance Graph
     const attendanceData = useMemo(() => {
         if (!selectedAttendanceClass) return [];
-        const history = attendance?.filter((h) => h.classId === selectedAttendanceClass);
+        const history = attendance.filter(
+            (h) => h.classId === selectedAttendanceClass
+        );
 
         if (attendanceView === "monthly") {
             const monthly = {};
@@ -124,16 +169,17 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
                 attendance: Math.round((h.present / h.total) * 100),
             }));
         }
-    }, [selectedAttendanceClass, attendanceView]);
+    }, [attendance, selectedAttendanceClass, attendanceView]);
 
-    // Exam Graph Data
+    // ✅ Exam Performance Graph
     const examGraphData = useMemo(() => {
         if (!selectedExamId) return [];
         const results = examResults.filter((r) => r.examId === selectedExamId);
         const subjectMap = {};
 
         results.forEach((r) => {
-            if (!subjectMap[r.subject]) subjectMap[r.subject] = { total: 0, count: 0 };
+            if (!subjectMap[r.subject])
+                subjectMap[r.subject] = { total: 0, count: 0 };
             subjectMap[r.subject].total += r.marks;
             subjectMap[r.subject].count += 1;
         });
@@ -143,9 +189,16 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
             avgMarks: Math.round(d.total / d.count),
         }));
     }, [selectedExamId, examResults]);
-
     const examsForClass = exams.filter((e) => e.classId === selectedExamClass);
 
+
+    // ✅ UI Loading / Error Handling
+    if (loading) return <div className="text-center p-10">Loading dashboard...</div>;
+    if (error) return <div className="text-red-500 text-center p-10">{error}</div>;
+    const user = {
+        name: "Anil",
+        avatar: "img.png"
+    }
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden">
             {/* Mobile Overlay */}
@@ -172,7 +225,7 @@ export const HeadmasterDashboard = ({ user, data, handlers, onLogout }) => {
                                 {user?.avatar}
                             </div>
                             <div>
-                                <p className="font-bold text-sm lg:text-lg">{user.name}</p>
+                                <p className="font-bold text-sm lg:text-lg">{user?.name}</p>
                                 <p className="text-xs lg:text-sm opacity-90">Headmaster</p>
                             </div>
                         </div>

@@ -10,9 +10,9 @@ const router = express.Router();
 router.get(
   "/",
   protect,
-  authorize("headmaster", "class_teacher", "teacher"),
+  authorize("headmaster", "class_teacher", "teacher", "student"),
   getAttendance
 );
-router.post("/", protect, authorize("class_teacher"), markAttendance);
+router.post("/", protect, authorize("class_teacher","headmaster"), markAttendance);
 
 export default router;

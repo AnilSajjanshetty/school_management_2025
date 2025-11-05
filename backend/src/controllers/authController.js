@@ -2,12 +2,24 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
+const generateAccessToken = (id) => {
+  return jwt.sign(
+    { id },
+    process.env.JWT_SECRET || "your-super-secret-jwt-key-here-2025",
+    { expiresIn: "1h" }
+  ); // short-lived
 };
 
+const generateRefreshToken = (id) => {
+  return jwt.sign(
+    { id },
+    process.env.JWT_REFRESH_SECRET ||
+      "your-super-secret-refresht-key-here-2025",
+    { expiresIn: "7d" }
+  ); // long-lived
+};
+
+// 🧩 Login controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -15,55 +27,70 @@ export const login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export const seedUsers = async (req, res) => {
-  const users = [
-    {
-      name: "Headmaster Raj",
-      email: "head@brightpath.com",
-      password: "123456",
-      role: "headmaster",
-    },
-    {
-      name: "Ms. Anita",
-      email: "anita@brightpath.com",
-      password: "123456",
-      role: "class_teacher",
-    },
-    {
-      name: "Mr. Kumar",
-      email: "kumar@brightpath.com",
-      password: "123456",
-      role: "teacher",
-    },
-    {
-      name: "Priya Sharma",
-      email: "priya@brightpath.com",
-      password: "123456",
-      role: "student",
-    },
-  ];
-
+// 🧩 Register controller
+export const register = async (req, res) => {
+  const { name, email, password, role } = req.body;
   try {
-    await User.deleteMany({});
-    const hashed = users.map((u) => ({
-      ...u,
-      password: bcrypt.hashSync(u.password, 10),
-    }));
-    const created = await User.insertMany(hashed);
-    res.json({ message: "Users seeded", count: created.length });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    const accessToken = generateAccessToken(newUser._id);
+    const refreshToken = generateRefreshToken(newUser._id);
+
+    res.status(201).json({
+      message: "Registration successful",
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// 🧩 Refresh token controller
+export const refreshToken = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token)
+    return res.status(401).json({ message: "Refresh token required" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    const accessToken = generateAccessToken(decoded.id);
+    res.json({ accessToken });
+  } catch (error) {
+    res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 };
