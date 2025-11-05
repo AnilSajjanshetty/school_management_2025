@@ -1,5 +1,5 @@
 // src/pages/ClassTeacherDashboard.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Modal } from "../components/Modal";
 import { AddProgressForm } from "../components/Forms/AddProgressForm";
 import { AnnouncementForm } from "../components/Forms/AnnouncementForm";
@@ -14,28 +14,174 @@ import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Cell
 } from "recharts";
+import axiosInstance from "../config/axiosInstance";
 
-const FALLBACK_TIMETABLES = [
-    {
-        classId: "class-1A",
-        schedule: {
-            Monday: [
-                { time: "09:00", subject: "Math", teacher: "Anil Sir" },
-                { time: "10:00", subject: "Science", teacher: "Anil Sir" },
-            ],
-        },
-    },
-];
+export const ClassTeacherDashboard = ({ user, onLogout }) => {
 
-export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
-    const {
-        students = [], announcements = [], timetables = [], exams = [], progress = [],
-        classes = [], events = [], attendance = [], examResults = [], examSubjects = []
-    } = data;
+    // =============================
+    // 🎯 1️⃣ Separate States
+    // =============================
+    const [students, setStudents] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [timetables, setTimetables] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [progress, setProgress] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [attendance, setAttendance] = useState([]);
+    const [examResults, setExamResults] = useState([]);
+    const [examSubjects, setExamSubjects] = useState([]);
 
-    const { addProgress, addAnnouncement, addEvent, addExam } = handlers;
+    // ⚙️ Status States
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const allTimetables = timetables.length > 0 ? timetables : FALLBACK_TIMETABLES;
+    // =============================
+    // 🌐 2️⃣ Fetch All Data (Axios)
+    // =============================
+    const fetchAllData = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const token = localStorage.getItem("token"); // ✅ assuming token is stored here
+            const config = {
+                headers: { Authorization: `Bearer ${token}` },
+            };
+
+            // Use Promise.all for parallel requests
+            const [
+                studentsRes,
+                announcementsRes,
+                timetablesRes,
+                examsRes,
+                progressRes,
+                classesRes,
+                eventsRes,
+                attendanceRes,
+                examResultsRes,
+                examSubjectsRes,
+            ] = await Promise.all([
+                axiosInstance.get("/api/students", config),
+                axiosInstance.get("/api/announcements", config),
+                axiosInstance.get("/api/timetables", config),
+                axiosInstance.get("/api/exams", config),
+                axiosInstance.get("/api/progress", config),
+                axiosInstance.get("/api/classes", config),
+                axiosInstance.get("/api/events", config),
+                axiosInstance.get("/api/attendance", config),
+                axiosInstance.get("/api/exam-results", config),
+                axiosInstance.get("/api/exam-subjects", config),
+            ]);
+
+            // ✅ Update each useState with fetched data
+            setStudents(studentsRes.data || []);
+            setAnnouncements(announcementsRes.data || []);
+            setTimetables(timetablesRes.data || []);
+            setExams(examsRes.data || []);
+            setProgress(progressRes.data || []);
+            setClasses(classesRes.data || []);
+            setEvents(eventsRes.data || []);
+            setAttendance(attendanceRes.data || []);
+            setExamResults(examResultsRes.data || []);
+            setExamSubjects(examSubjectsRes.data || []);
+        } catch (err) {
+            console.error("❌ Error fetching dashboard data:", err);
+            setError(err.response?.data?.message || "Failed to load dashboard data.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch data on mount
+    useEffect(() => {
+        fetchAllData();
+    }, []);
+
+    // =============================
+    // 🧩 3️⃣ CRUD Handlers (with try/catch)
+    // =============================
+
+    const handleAddAnnouncement = async (data) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axiosInstance.post("/api/announcements", data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setAnnouncements((prev) => [res.data, ...prev]);
+        } catch (err) {
+            console.error("Error adding announcement:", err);
+            alert("Failed to add announcement.");
+        }
+    };
+
+    const handleAddEvent = async (data) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axiosInstance.post("/api/events", data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setEvents((prev) => [res.data, ...prev]);
+        } catch (err) {
+            console.error("Error adding event:", err);
+            alert("Failed to add event.");
+        }
+    };
+
+    const handleAddContactMessage = async (data) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axiosInstance.post("/api/contact", data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("Message sent:", res.data);
+        } catch (err) {
+            console.error("Error sending contact message:", err);
+            alert("Failed to send contact message.");
+        }
+    };
+
+    const handleAddProgress = async (data) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axiosInstance.post("/api/progress", data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setProgress((prev) => [res.data, ...prev]);
+        } catch (err) {
+            console.error("Error adding progress:", err);
+            alert("Failed to add progress.");
+        }
+    };
+
+    const handleDeleteAnnouncement = async (id) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axiosInstance.delete(`/api/announcements/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setAnnouncements((prev) => prev.filter((a) => a._id !== id));
+        } catch (err) {
+            console.error("Error deleting announcement:", err);
+            alert("Failed to delete announcement.");
+        }
+    };
+
+    const handleEditEvent = async (id, updatedData) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axiosInstance.put(`/api/events/${id}`, updatedData, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setEvents((prev) =>
+                prev.map((ev) => (ev._id === id ? res.data : ev))
+            );
+        } catch (err) {
+            console.error("Error updating event:", err);
+            alert("Failed to update event.");
+        }
+    };
+
 
     // State
     const [activeTab, setActiveTab] = useState("overview");
@@ -48,18 +194,18 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Independent selectors
-    const [attendanceClassId, setAttendanceClassId] = useState(user.assignedClassId);
+    const [attendanceClassId, setAttendanceClassId] = useState(user?.assignedClassId);
     const [timeFilter, setTimeFilter] = useState("daily");
-    const [examClassId, setExamClassId] = useState(user.assignedClassId);
+    const [examClassId, setExamClassId] = useState(user?.assignedClassId);
     const [selectedExamId, setSelectedExamId] = useState("");
 
     // Derived
-    const myClass = classes.find(c => c.id === user.assignedClassId);
+    const myClass = classes.find(c => c.id === user?.assignedClassId);
     const myClassStudents = myClass ? students.filter(s => s.classId === myClass.id) : [];
 
     const getTeachingClasses = () => {
         const teaching = new Set();
-        allTimetables.forEach(tt => {
+        timetables.forEach(tt => {
             const classInfo = classes.find(c => c.id === tt.classId);
             if (!classInfo) return;
             Object.values(tt.schedule || {}).forEach(slots => {
@@ -77,7 +223,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
     const getClassStudents = (classId) => students.filter(s => s.classId === classId);
     const getStudentProgress = (studentId) => progress.filter(p => p.studentId === studentId);
 
-    const classId = user.assignedClassId;
+    const classId = user?.assignedClassId;
     const myClassAnnouncements = announcements
         .filter(a => a.visibility === `class:${classId}`)
         .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -144,7 +290,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
         const schedule = { Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [] };
 
-        allTimetables.forEach(tt => {
+        timetables.forEach(tt => {
             const classInfo = classes.find(c => c.id === tt.classId);
             if (!classInfo) return;
             Object.entries(tt.schedule || {}).forEach(([day, slots]) => {
@@ -201,7 +347,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
     };
 
     const renderMyClassTimetable = () => {
-        const tt = allTimetables.find(t => t.classId === user.assignedClassId);
+        const tt = timetables.find(t => t.classId === user.assignedClassId);
         if (!tt?.schedule) return <p className="text-gray-500 italic text-center py-8 text-sm lg:text-base">No class timetable available.</p>;
         return renderTimetableTable(tt.schedule);
     };
@@ -229,10 +375,10 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="bg-purple-600 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center text-base lg:text-xl font-bold">
-                                {user.avatar || "CT"}
+                                {user?.avatar || "CT"}
                             </div>
                             <div>
-                                <p className="font-bold text-sm lg:text-base">{user.name}</p>
+                                <p className="font-bold text-sm lg:text-base">{user?.name}</p>
                                 <p className="text-xs lg:text-sm text-purple-200">Class Teacher</p>
                             </div>
                         </div>
@@ -645,8 +791,8 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
             <Modal open={showProgress} title={`Add Progress - ${selectedStudent?.name}`} onClose={() => setShowProgress(false)}>
                 <AddProgressForm
                     student={selectedStudent}
-                    onAdd={(p) => {
-                        addProgress({ ...p, studentId: selectedStudent.id });
+                    onAdd={(progressData) => {
+                        handleAddProgress({ ...progressData, studentId: selectedStudent.id });
                         setShowProgress(false);
                     }}
                     onClose={() => setShowProgress(false)}
@@ -657,7 +803,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
             <Modal open={showAnnForm} title="Create Announcement" onClose={() => setShowAnnForm(false)}>
                 <AnnouncementForm
                     onCreate={(a) => {
-                        addAnnouncement({ ...a, visibility: `class:${classId}` });
+                        handleAddAnnouncement({ ...a, visibility: `class:${classId}` });
                         setShowAnnForm(false);
                     }}
                     onClose={() => setShowAnnForm(false)}
@@ -667,7 +813,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
             <Modal open={showEventForm} title="Create Event" onClose={() => setShowEventForm(false)}>
                 <EventForm
                     onCreate={(e) => {
-                        addEvent({ ...e, classId });
+                        handleAddEvent({ ...e, classId });
                         setShowEventForm(false);
                     }}
                     onClose={() => setShowEventForm(false)}
@@ -677,7 +823,7 @@ export const ClassTeacherDashboard = ({ user, data, handlers, onLogout }) => {
             <Modal open={showExamForm} title="Schedule Exam" onClose={() => setShowExamForm(false)}>
                 <ExamForm
                     onCreate={(exam) => {
-                        addExam(exam);
+                        handleAddExam({ ...exam, classId });
                         setShowExamForm(false);
                     }}
                     onClose={() => setShowExamForm(false)}

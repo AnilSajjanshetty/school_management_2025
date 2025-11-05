@@ -1,48 +1,103 @@
 // src/pages/StudentDashboard.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { renderTimetableTable } from "../components/TimetableTable";
 import { Menu, X, Bell, Calendar, MessageSquare, BookOpen, Award, Clock, ChevronRight, Plus } from "lucide-react";
-
+import axiosInstance from "../config/axiosInstance";
 const classesName = (classId, classes = []) => classes.find(c => c.id === classId)?.name || '-';
 
-export const StudentDashboard = ({ user, data, onLogout }) => {
-    const { students, announcements, exams, timetables, classes, events, contactMessages } = data;
-    const student = students.find(s => s.id === user.studentId) || students[0];
-    const timetable = timetables.find(t => t.classId === student.classId);
+export const StudentDashboard = ({ user, onLogout }) => {
+    // === State for data ===
+    const [students, setStudents] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [timetables, setTimetables] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [contactMessages, setContactMessages] = useState([]);
+    const [attendance, setAttendance] = useState([])
 
+    // === UI State ===
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("overview");
     const [showMessageForm, setShowMessageForm] = useState(false);
 
-    // Filter data for this student
+    // === Fetch all data with axiosInstance ===
+    useEffect(() => {
+        const fetchAllData = async () => {
+            try {
+                const [
+                    studentsRes,
+                    announcementsRes,
+                    examsRes,
+                    timetablesRes,
+                    classesRes,
+                    eventsRes,
+                    contactMessagesRes,
+                ] = await Promise.all([
+                    axiosInstance.get("/students"),
+                    axiosInstance.get("/announcements"),
+                    axiosInstance.get("/exams"),
+                    axiosInstance.get("/timetables"),
+                    axiosInstance.get("/classes"),
+                    axiosInstance.get("/events"),
+                    axiosInstance.get("/contact-messages"),
+                ]);
+
+                setStudents(studentsRes.data);
+                setAnnouncements(announcementsRes.data);
+                setExams(examsRes.data);
+                setTimetables(timetablesRes.data);
+                setClasses(classesRes.data);
+                setEvents(eventsRes.data);
+                setContactMessages(contactMessagesRes.data);
+            } catch (error) {
+                console.error("❌ Error fetching student dashboard data:", error);
+            }
+        };
+
+        fetchAllData();
+    }, []);
+
+    // === Derived data ===
+    const student = students.find((s) => s.id === user?.studentId) || students[0];
+    const timetable = timetables.find((t) => t.classId === student?.classId);
+
     const myAnnouncements = useMemo(() => {
+        if (!student) return [];
         return announcements
-            .filter(a => !a.visibility || a.visibility === "public" || a.visibility === `class:${student.classId}`)
+            .filter(
+                (a) =>
+                    !a.visibility ||
+                    a.visibility === "public" ||
+                    a.visibility === `class:${student.classId}`
+            )
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 3);
-    }, [announcements, student.classId]);
+    }, [announcements, student]);
 
     const myEvents = useMemo(() => {
+        if (!student) return [];
         const today = new Date().toISOString().split("T")[0];
         return events
-            .filter(e => e.classId === student.classId && e.date >= today)
+            .filter((e) => e.classId === student.classId && e.date >= today)
             .sort((a, b) => a.date.localeCompare(b.date))
             .slice(0, 3);
-    }, [events, student.classId]);
+    }, [events, student]);
 
     const myContactMessages = useMemo(() => {
+        if (!student) return [];
         return contactMessages
-            .filter(m => m.studentId === student.id)
+            .filter((m) => m.studentId === student.id)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [contactMessages, student.id]);
+    }, [contactMessages, student]);
 
     const upcomingExams = useMemo(() => {
+        if (!student) return [];
         const today = new Date().toISOString().split("T")[0];
         return exams
-            .filter(ex => ex.classId === student.classId && ex.date >= today)
+            .filter((ex) => ex.classId === student.classId && ex.date >= today)
             .sort((a, b) => a.date.localeCompare(b.date));
-    }, [exams, student.classId]);
-
+    }, [exams, student]);
     const renderSection = () => {
         switch (activeSection) {
             case "timetable":
@@ -160,12 +215,12 @@ export const StudentDashboard = ({ user, data, onLogout }) => {
                             <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg">
                                 <BookOpen className="w-8 h-8 mb-2" />
                                 <p className="text-sm opacity-90">Attendance</p>
-                                <p className="text-3xl font-bold">{student.attendance}%</p>
+                                <p className="text-3xl font-bold">{student?.attendance}%</p>
                             </div>
                             <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-5 rounded-xl shadow-lg">
                                 <Award className="w-8 h-8 mb-2" />
                                 <p className="text-sm opacity-90">Avg Score</p>
-                                <p className="text-3xl font-bold">{student.avgScore}%</p>
+                                <p className="text-3xl font-bold">{student?.avgScore}%</p>
                             </div>
                             <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-5 rounded-xl shadow-lg">
                                 <Calendar className="w-8 h-8 mb-2" />
@@ -253,18 +308,18 @@ export const StudentDashboard = ({ user, data, onLogout }) => {
                     <div className="flex-1 flex flex-col p-6 overflow-y-auto">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg">
-                                {student.name.charAt(0).toUpperCase()}
+                                {student?.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                                <p className="font-bold text-lg">{student.name}</p>
+                                <p className="font-bold text-lg">{student?.name}</p>
                                 <p className="text-sm opacity-90">Student</p>
                             </div>
                         </div>
 
                         <div className="mb-6 bg-blue-700 p-4 rounded-lg">
                             <p className="text-xs opacity-90">Class</p>
-                            <p className="font-semibold">{classesName(student.classId, classes)}</p>
-                            <p className="text-xs mt-2 opacity-90">Roll: {student.roll}</p>
+                            <p className="font-semibold">{classesName(student?.classId, classes)}</p>
+                            <p className="text-xs mt-2 opacity-90">Roll: {student?.roll}</p>
                         </div>
 
                         <nav className="flex-1 space-y-1">
