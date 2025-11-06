@@ -1,4 +1,4 @@
-// components/ClasssTeacherDashboard.jsx
+// components/ClassTeacherDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import {
     TrendingUp, UserCheck, BookOpen, Clock, Megaphone, Calendar,
@@ -15,8 +15,9 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const userId = localStorage.getItem("userId")
-    // State for all data
+    const userId = localStorage.getItem("userId");
+
+    // State
     const [dashboardData, setDashboardData] = useState(null);
     const [myClassData, setMyClassData] = useState(null);
     const [teachingClassesData, setTeachingClassesData] = useState([]);
@@ -29,7 +30,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchDashboard = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/class-teacher/dashboard/${userId}`);
+            const response = await axiosInstance.get(`/classTeacher/dashboard/${userId}`);
             setDashboardData(response.data);
             setError(null);
         } catch (err) {
@@ -43,7 +44,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchMyClass = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/class-teacher/my-class/${userId}`);
+            const response = await axiosInstance.get(`/classTeacher/my-class/${userId}`);
             setMyClassData(response.data);
             setError(null);
         } catch (err) {
@@ -57,7 +58,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchTeachingClasses = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/class-teacher/teaching-classes/${userId}`);
+            const response = await axiosInstance.get(`/classTeacher/teaching-classes/${userId}`);
             setTeachingClassesData(response.data);
             setError(null);
         } catch (err) {
@@ -71,7 +72,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchTimetable = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/class-teacher/timetable/${userId}`);
+            const response = await axiosInstance.get(`/classTeacher/timetable/${userId}`);
             setTimetableData(response.data);
             setError(null);
         } catch (err) {
@@ -85,7 +86,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/class-teacher/announcements');
+            const response = await axiosInstance.get('/classTeacher/announcements');
             setAnnouncementsData(response.data);
             setError(null);
         } catch (err) {
@@ -99,7 +100,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchEvents = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/class-teacher/events');
+            const response = await axiosInstance.get('/classTeacher/events');
             setEventsData(response.data);
             setError(null);
         } catch (err) {
@@ -113,7 +114,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const fetchExams = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/class-teacher/exams/${userId}`);
+            const response = await axiosInstance.get(`/classTeacher/exams/${userId}`);
             setExamsData(response.data);
             setError(null);
         } catch (err) {
@@ -179,7 +180,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
             case 'overview': return <OverviewTab data={dashboardData} />;
             case 'myclass': return <MyClassTab data={myClassData} />;
             case 'teaching': return <TeachingClassesTab data={teachingClassesData} />;
-            case 'timetables': return <TimetableTab data={timetableData} />;
+            case 'timetables': return <TimetableTab timetableData={timetableData} />;
             case 'announcements': return <AnnouncementsTab data={announcementsData} />;
             case 'events': return <EventsTab data={eventsData} />;
             case 'exams': return <ExamsTab data={examsData} />;
@@ -191,11 +192,11 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
         <div className="flex h-screen bg-gray-50">
             {/* Sidebar */}
             <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-72 bg-purple-800 text-white
-        transform transition-transform duration-300
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        flex flex-col
-      `}>
+                fixed lg:static inset-y-0 left-0 z-50 w-72 bg-purple-800 text-white
+                transform transition-transform duration-300
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                flex flex-col
+            `}>
                 <div className="p-4 lg:p-6 border-b border-purple-700">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -238,7 +239,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
                             key={tab}
                             onClick={() => { setActiveTab(tab); setIsSidebarOpen(false); }}
                             className={`w-full text-left px-3 py-2 rounded flex items-center gap-2 transition text-sm lg:text-base
-                ${activeTab === tab ? "bg-purple-700" : "hover:bg-purple-700"}`}
+                                ${activeTab === tab ? "bg-purple-700" : "hover:bg-purple-700"}`}
                         >
                             <Icon className="w-4 h-4" /> {label}
                         </button>
@@ -254,7 +255,6 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
                 <header className="bg-white shadow-sm px-4 lg:px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
@@ -278,7 +278,6 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
                     <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-purple-600" />
                 </header>
 
-                {/* Content Area */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     {renderContent()}
                 </main>
@@ -294,7 +293,6 @@ const OverviewTab = ({ data }) => {
 
     return (
         <div className="space-y-6">
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     { label: "Total Students", value: data.totalStudents || 0, icon: Users, color: "from-purple-500 to-purple-600" },
@@ -310,7 +308,6 @@ const OverviewTab = ({ data }) => {
                 ))}
             </div>
 
-            {/* Attendance Chart */}
             {data.attendanceTrend && data.attendanceTrend.length > 0 && (
                 <div className="bg-white p-6 rounded-lg shadow">
                     <h3 className="text-lg font-bold mb-4">Attendance Trend</h3>
@@ -326,7 +323,6 @@ const OverviewTab = ({ data }) => {
                 </div>
             )}
 
-            {/* Recent Activity */}
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white p-5 rounded-lg shadow">
                     <h3 className="font-bold mb-3">Recent Announcements</h3>
@@ -392,58 +388,236 @@ const MyClassTab = ({ data }) => {
     );
 };
 
+/* ==================== CLASSES I TEACH – DAY × TIME TABLE ==================== */
 const TeachingClassesTab = ({ data }) => {
-    if (!data || data.length === 0) return <p className="text-gray-500 text-center py-8">No teaching classes</p>;
+    if (!data || data.length === 0) {
+        return <p className="text-gray-500 text-center py-8">No classes assigned</p>;
+    }
+
+    // ---------- 1. Build timetable { day → [slot,…] } ----------
+    const timetable = {};
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    data.forEach(cls => {
+        const className = `${cls.name} ${cls.section || ''}`.trim();
+
+        cls.schedule?.forEach(s => {
+            const day = s.day;
+            if (!timetable[day]) timetable[day] = [];
+
+            timetable[day].push({
+                subject: s.subject,
+                subjectCode: s.subjectCode || null,
+                className,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                room: s.room || null,
+            });
+        });
+    });
+
+    // ---------- 2. Unique time slots ----------
+    const timeSlots = Array.from(
+        new Set(
+            Object.values(timetable).flatMap(arr =>
+                arr.map(s => `${s.startTime}-${s.endTime}`)
+            )
+        )
+    )
+        .sort()
+        .map(t => {
+            const [start, end] = t.split('-');
+            return { start, end };
+        });
 
     return (
-        <div className="space-y-4">
-            {data.map((cls, i) => (
-                <div key={i} className="bg-white p-5 rounded-lg shadow">
-                    <h3 className="font-bold text-lg">{cls.className}</h3>
-                    <p className="text-sm text-gray-600">Subject: {cls.subject}</p>
-                    <p className="text-sm">Students: {cls.students}</p>
-                </div>
-            ))}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+            {/* Header */}
+            <div className="p-4 bg-purple-50 border-b">
+                <h3 className="text-lg font-bold text-purple-900">Classes I Teach</h3>
+                <p className="text-sm text-purple-700">Your teaching schedule by day and time</p>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-purple-100">
+                        <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">
+                                Time
+                            </th>
+                            {days.map(d => (
+                                <th
+                                    key={d}
+                                    className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider"
+                                >
+                                    {d.slice(0, 3)}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {timeSlots.map(({ start, end }) => (
+                            <tr key={`${start}-${end}`} className="hover:bg-gray-50">
+                                {/* Time column */}
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-gray-50">
+                                    <div>{start}</div>
+                                    <div className="text-xs text-gray-500">down {end}</div>
+                                </td>
+
+                                {/* Day columns */}
+                                {days.map(day => {
+                                    const slots = timetable[day]?.filter(
+                                        s => s.startTime === start && s.endTime === end
+                                    ) || [];
+
+                                    return (
+                                        <td
+                                            key={day}
+                                            className="px-2 py-2 align-top min-h-[70px] text-xs"
+                                        >
+                                            {slots.length > 0 ? (
+                                                <div className="space-y-1">
+                                                    {slots.map((slot, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="bg-gradient-to-r from-purple-100 to-purple-50 border border-purple-300 rounded p-2"
+                                                        >
+                                                            <p className="font-semibold text-purple-900">{slot.subject}</p>
+                                                            {slot.subjectCode && (
+                                                                <p className="text-purple-700">[ {slot.subjectCode} ]</p>
+                                                            )}
+                                                            <p className="font-medium text-purple-800">{slot.className}</p>
+                                                            {slot.room && (
+                                                                <p className="text-gray-600">Room: {slot.room}</p>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-300">—</span>
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Legend */}
+            <div className="p-3 bg-gray-50 border-t text-xs text-gray-600 flex gap-4 flex-wrap">
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-purple-200 rounded"></div> Subject
+                </span>
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-purple-300 rounded"></div> Class
+                </span>
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-gray-200 rounded"></div> Room
+                </span>
+            </div>
         </div>
     );
 };
 
-const TimetableTab = ({ data }) => {
-    if (!data || Object.keys(data).length === 0) return <p className="text-gray-500 text-center py-8">No timetable</p>;
+/* ==================== TIMETABLE TAB (UNCHANGED) ==================== */
+const TimetableTab = ({ timetableData }) => {
+    if (!timetableData || Object.keys(timetableData).length === 0) {
+        return <p className="text-gray-500 text-center py-8">No timetable</p>;
+    }
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    const times = Array.from(new Set(days.flatMap(d => data[d]?.map(s => s.time) || []))).sort();
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const timeSlots = Array.from(
+        new Set(
+            Object.values(timetableData).flatMap((arr) =>
+                arr.map((s) => `${s.startTime}-${s.endTime}`)
+            )
+        )
+    )
+        .sort()
+        .map((t) => {
+            const [start, end] = t.split("-");
+            return { start, end };
+        });
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow overflow-x-auto">
-            <table className="w-full table-auto min-w-[600px]">
-                <thead>
-                    <tr>
-                        <th className="border p-2 bg-purple-100">Time</th>
-                        {days.map(d => <th key={d} className="border p-2 bg-purple-100">{d}</th>)}
-                    </tr>
-                </thead>
-                <tbody>
-                    {times.map(t => (
-                        <tr key={t}>
-                            <td className="border p-2 font-medium bg-gray-50">{t}</td>
-                            {days.map(d => {
-                                const slot = data[d]?.find(s => s.time === t);
-                                return (
-                                    <td key={d} className="border p-2">
-                                        {slot ? (
-                                            <div className="bg-purple-50 p-2 rounded">
-                                                <p className="font-semibold text-purple-900">{slot.subject}</p>
-                                                <p className="text-xs text-purple-700">{slot.class}</p>
-                                            </div>
-                                        ) : <span className="text-gray-400">—</span>}
-                                    </td>
-                                );
-                            })}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-4 bg-purple-50 border-b">
+                <h3 className="text-lg font-bold text-purple-900">My Teaching Timetable</h3>
+                <p className="text-sm text-purple-700">Official school schedule</p>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-purple-100">
+                        <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">
+                                Time
+                            </th>
+                            {days.map((d) => (
+                                <th
+                                    key={d}
+                                    className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider"
+                                >
+                                    {d.slice(0, 3)}
+                                </th>
+                            ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {timeSlots.map(({ start, end }) => (
+                            <tr key={`${start}-${end}`} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-gray-50">
+                                    <div>{start}</div>
+                                    <div className="text-xs text-gray-500">down {end}</div>
+                                </td>
+                                {days.map((day) => {
+                                    const slot = timetableData[day]?.find(
+                                        (s) => s.startTime === start && s.endTime === end
+                                    );
+                                    return (
+                                        <td
+                                            key={day}
+                                            className="px-2 py-2 align-top min-h-[70px] text-xs"
+                                        >
+                                            {slot ? (
+                                                <div className="bg-gradient-to-r from-purple-100 to-purple-50 border border-purple-300 rounded p-2">
+                                                    <p className="font-semibold text-purple-900">{slot.subject}</p>
+                                                    {slot.subjectCode && (
+                                                        <p className="text-purple-700">[ {slot.subjectCode} ]</p>
+                                                    )}
+                                                    <p className="font-medium text-purple-800">{slot.className}</p>
+                                                    {slot.room && (
+                                                        <p className="text-gray-600">Room: {slot.room}</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-300">—</span>
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="p-3 bg-gray-50 border-t text-xs text-gray-600 flex gap-4 flex-wrap">
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-purple-200 rounded"></div> Subject
+                </span>
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-purple-300 rounded"></div> Class
+                </span>
+                <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-gray-200 rounded"></div> Room
+                </span>
+            </div>
         </div>
     );
 };
@@ -496,4 +670,3 @@ const ExamsTab = ({ data }) => {
         </div>
     );
 };
-

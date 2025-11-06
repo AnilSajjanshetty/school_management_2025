@@ -33,6 +33,9 @@ attendanceSchema.index(
   { studentId: 1, date: 1 },
   { unique: true, sparse: true }
 );
-attendanceSchema.index({ classId: 1, date: 1 });
+// Only apply unique index in production (skip during seeding)
+if (process.env.NODE_ENV !== "seeding") {
+  attendanceSchema.index({ studentId: 1, date: 1 }, { unique: true });
+}
 
 export default mongoose.model("Attendance", attendanceSchema);

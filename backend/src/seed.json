@@ -51,6 +51,34 @@
       "email": "suresh@school.com",
       "password": "@Anil1234",
       "role": "class_teacher"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000008",
+      "name": "Anita Desai",
+      "email": "anita@school.com",
+      "password": "@Anil1234",
+      "role": "class_teacher"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000010",
+      "name": "Rohan Patel",
+      "email": "rohan@school.com",
+      "password": "@Anil1234",
+      "role": "student"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000011",
+      "name": "Kavya Sharma",
+      "email": "kavya@school.com",
+      "password": "@Anil1234",
+      "role": "student"
+    },
+    {
+      "_id": "6730a5f2c5f8a1b001000012",
+      "name": "Aryan Joshi",
+      "email": "aryan@school.com",
+      "password": "@Anil1234",
+      "role": "student"
     }
   ],
 
@@ -59,7 +87,8 @@
     { "_id": "6730a6f2c5f8a1b002000002", "name": "Science", "code": "SCI102" },
     { "_id": "6730a6f2c5f8a1b002000003", "name": "English", "code": "ENG103" },
     { "_id": "6730a6f2c5f8a1b002000004", "name": "Social Studies", "code": "SST104" },
-    { "_id": "6730a6f2c5f8a1b002000005", "name": "Computer Science", "code": "CSC105" }
+    { "_id": "6730a6f2c5f8a1b002000005", "name": "Computer Science", "code": "CSC105" },
+    { "_id": "6730a6f2c5f8a1b002000006", "name": "Hindi", "code": "HIND106" }
   ],
 
   "teachers": [
@@ -76,24 +105,46 @@
     {
       "_id": "6730a7f2c5f8a1b003000003",
       "userId": "6730a5f2c5f8a1b001000007",
-      "subjects": ["6730a6f2c5f8a1b002000004"]
+      "subjects": ["6730a6f2c5f8a1b002000001", "6730a6f2c5f8a1b002000002", "6730a6f2c5f8a1b002000003"]
+    },
+    {
+      "_id": "6730a7f2c5f8a1b003000004",
+      "userId": "6730a5f2c5f8a1b001000008",
+      "subjects": ["6730a6f2c5f8a1b002000004", "6730a6f2c5f8a1b002000006"]
+    },
+    {
+      "_id": "6730a7f2c5f8a1b003000005",
+      "userId": "6730a5f2c5f8a1b001000002",
+      "subjects": ["6730a6f2c5f8a1b002000005"]
     }
+   
   ],
 
   "classes": [
-    {
+     {
       "_id": "6730a8f2c5f8a1b004000001",
       "name": "10th Grade",
       "section": "A",
-      "classTeacherId": "6730a7f2c5f8a1b003000001",
-      "subjects": ["6730a6f2c5f8a1b002000001", "6730a6f2c5f8a1b002000002", "6730a6f2c5f8a1b002000003"]
+      "classTeacherId": "6730a7f2c5f8a1b003000003",
+      "subjects": [
+        "6730a6f2c5f8a1b002000001",
+        "6730a6f2c5f8a1b002000002",
+        "6730a6f2c5f8a1b002000003"
+      ]
     },
     {
       "_id": "6730a8f2c5f8a1b004000002",
       "name": "9th Grade",
       "section": "B",
-      "classTeacherId": "6730a7f2c5f8a1b003000002",
-      "subjects": ["6730a6f2c5f8a1b002000003", "6730a6f2c5f8a1b002000004"]
+      "classTeacherId": "6730a7f2c5f8a1b003000004",
+      "subjects": ["6730a6f2c5f8a1b002000003", "6730a6f2c5f8a1b002000004", "6730a6f2c5f8a1b002000006"]
+    },
+    {
+      "_id": "6730a8f2c5f8a1b004000003",
+      "name": "8th Grade",
+      "section": "A",
+      "classTeacherId": "6730a7f2c5f8a1b003000001",
+      "subjects": ["6730a6f2c5f8a1b002000001", "6730a6f2c5f8a1b002000002"]
     }
   ],
 
@@ -109,6 +160,30 @@
       "userId": "6730a5f2c5f8a1b001000005",
       "classId": "6730a8f2c5f8a1b004000002",
       "rollNumber": 2
+    },
+    {
+      "_id": "6730a9f2c5f8a1b005000003",
+      "userId": "6730a5f2c5f8a1b001000010",
+      "classId": "6730a8f2c5f8a1b004000001",
+      "rollNumber": 3
+    },
+    {
+      "_id": "6730a9f2c5f8a1b005000004",
+      "userId": "6730a5f2c5f8a1b001000011",
+      "classId": "6730a8f2c5f8a1b004000001",
+      "rollNumber": 4
+    },
+    {
+      "_id": "6730a9f2c5f8a1b005000005",
+      "userId": "6730a5f2c5f8a1b001000012",
+      "classId": "6730a8f2c5f8a1b004000002",
+      "rollNumber": 5
+    },
+    {
+      "_id": "6730a9f2c5f8a1b005000006",
+      "userId": "6730a5f2c5f8a1b001000003",
+      "classId": "6730a8f2c5f8a1b004000003",
+      "rollNumber": 6
     }
   ],
 
@@ -116,10 +191,10 @@
     {
       "_id": "6730aaf2c5f8a1b006000001",
       "classId": "6730a8f2c5f8a1b004000001",
+      "teacherId": "6730a7f2c5f8a1b003000003",
+      "subjectId": "6730a6f2c5f8a1b002000001",
       "day": "Monday",
       "period": 1,
-      "subjectId": "6730a6f2c5f8a1b002000001",
-      "teacherId": "6730a7f2c5f8a1b003000001",
       "startTime": "09:00 AM",
       "endTime": "09:45 AM",
       "room": "Room 101"
@@ -127,52 +202,50 @@
     {
       "_id": "6730aaf2c5f8a1b006000002",
       "classId": "6730a8f2c5f8a1b004000001",
-      "day": "Monday",
-      "period": 2,
+      "teacherId": "6730a7f2c5f8a1b003000003",
       "subjectId": "6730a6f2c5f8a1b002000002",
-      "teacherId": "6730a7f2c5f8a1b003000001",
+      "day": "Tuesday",
+      "period": 2,
       "startTime": "10:00 AM",
       "endTime": "10:45 AM",
-      "room": "Room 102"
+      "room": "Lab 1"
     },
     {
       "_id": "6730aaf2c5f8a1b006000003",
       "classId": "6730a8f2c5f8a1b004000002",
-      "day": "Tuesday",
-      "period": 1,
+      "teacherId": "6730a7f2c5f8a1b003000004",
       "subjectId": "6730a6f2c5f8a1b002000004",
-      "teacherId": "6730a7f2c5f8a1b003000003",
+      "day": "Wednesday",
+      "period": 1,
       "startTime": "09:00 AM",
       "endTime": "09:45 AM",
-      "room": "Room 103"
-    }
-  ],
-
-  "exams": [
-    {
-      "_id": "6730abf2c5f8a1b007000001",
-      "title": "Mid Term Math Exam",
-      "classId": "6730a8f2c5f8a1b004000001",
-      "subject": "Mathematics",
-      "date": "2025-11-15T09:00:00.000Z",
-      "duration": 90,
-      "room": "Room 201",
-      "results": [
-        { "studentId": "6730a9f2c5f8a1b005000001", "marksObtained": 85, "grade": "A" }
-      ]
+      "room": "Room 102"
     },
     {
-      "_id": "6730abf2c5f8a1b007000002",
-      "title": "Science Practical Exam",
+      "_id": "6730aaf2c5f8a1b006000004",
+      "classId": "6730a8f2c5f8a1b004000003",
+      "teacherId": "6730a7f2c5f8a1b003000001",
+      "subjectId": "6730a6f2c5f8a1b002000001",
+      "day": "Thursday",
+      "period": 3,
+      "startTime": "11:00 AM",
+      "endTime": "11:45 AM",
+      "room": "Room 103"
+    },
+    {
+      "_id": "6730aaf2c5f8a1b006000005",
       "classId": "6730a8f2c5f8a1b004000001",
-      "subject": "Science",
-      "date": "2025-12-01T09:00:00.000Z",
-      "duration": 60,
-      "room": "Lab 1"
+      "teacherId": "6730a7f2c5f8a1b003000005",
+      "subjectId": "6730a6f2c5f8a1b002000005",
+      "day": "Friday",
+      "period": 4,
+      "startTime": "12:00 PM",
+      "endTime": "12:45 PM",
+      "room": "Computer Lab"
     }
   ],
 
-  "attendance": [
+"attendance": [
   {
     "studentId": "6730a9f2c5f8a1b005000001",
     "classId": "6730a8f2c5f8a1b004000001",
@@ -190,52 +263,56 @@
     "classId": "6730a8f2c5f8a1b004000001",
     "date": "2025-11-03T00:00:00.000Z",
     "status": "present"
+  },
+  {
+    "studentId": "6730a9f2c5f8a1b005000003",
+    "classId": "6730a8f2c5f8a1b004000001",
+    "date": "2025-11-01T00:00:00.000Z",
+    "status": "present"
+  },
+  {
+    "studentId": "6730a9f2c5f8a1b005000004",
+    "classId": "6730a8f2c5f8a1b004000001",
+    "date": "2025-11-02T00:00:00.000Z",
+    "status": "absent"
   }
 ],
-
-
-  "progress": [
-    {
-      "_id": "6730adf2c5f8a1b009000001",
-      "studentId": "6730a9f2c5f8a1b005000001",
-      "classId": "6730a8f2c5f8a1b004000001",
-      "term": "Mid Term",
-      "type":"academic",
-      "marks": {
-        "Mathematics": 88,
-        "Science": 82,
-        "English": 91
-      },
-      "remarks": "Excellent performance"
-    },
-    {
-      "_id": "6730adf2c5f8a1b009000002",
-      "studentId": "6730a9f2c5f8a1b005000002",
-      "classId": "6730a8f2c5f8a1b004000002",
-      "term": "Mid Term",
-      "type":"academic",
-      "marks": {
-        "English": 75,
-        "Social Studies": 69
-      },
-      "remarks": "Good effort, needs improvement in SST"
-    }
-  ],
 
   "events": [
     {
       "_id": "6730aef2c5f8a1b010000001",
       "title": "Annual Day Celebration",
-      "date": "2025-12-20",
-      "description": "School Annual Day with cultural programs and awards.",
-      "location": "School Auditorium"
+      "content": "Cultural programs, awards, and performances by students.",
+      "date": "2025-12-20T00:00:00.000Z",
+      "public": true
     },
     {
       "_id": "6730aef2c5f8a1b010000002",
       "title": "Science Exhibition",
-      "date": "2025-11-25",
-      "description": "Students showcase science models and experiments.",
-      "location": "Lab Hall"
+      "content": "Students showcase innovative science models and experiments.",
+      "date": "2025-11-25T00:00:00.000Z",
+      "public": true
+    },
+    {
+      "_id": "6730aef2c5f8a1b010000003",
+      "title": "Sports Day",
+      "content": "Annual sports meet with track and field events.",
+      "date": "2025-12-05T00:00:00.000Z",
+      "public": true
+    },
+    {
+      "_id": "6730aef2c5f8a1b010000004",
+      "title": "Independence Day",
+      "content": "Flag hoisting, speeches, and patriotic songs.",
+      "date": "2025-08-15T00:00:00.000Z",
+      "public": true
+    },
+    {
+      "_id": "6730aef2c5f8a1b010000005",
+      "title": "Teacher's Day",
+      "content": "Students honor teachers with performances and gifts.",
+      "date": "2025-09-05T00:00:00.000Z",
+      "public": true
     }
   ],
 
@@ -243,88 +320,94 @@
     {
       "_id": "6730aff2c5f8a1b011000001",
       "title": "Winter Vacation Notice",
-      "message": "School will remain closed from Dec 25 to Jan 2 for winter break.",
-      "date": "2025-12-10"
+      "content": "School will remain closed from Dec 25 to Jan 2 for winter break.",
+      "date": "2025-12-10T00:00:00.000Z",
+      "visibility": "public"
     },
     {
       "_id": "6730aff2c5f8a1b011000002",
       "title": "Parent-Teacher Meeting",
-      "message": "PTM scheduled on Nov 18 for all classes.",
-      "date": "2025-11-10"
-    }
-  ],
-
-  "testimonials": [
-    {
-      "_id": "6730b0f2c5f8a1b012000001",
-      "name": "Rahul Verma",
-      "role": "Parent",
-      "message": "The teachers are dedicated and the environment is very supportive."
+      "content": "PTM scheduled on Nov 18 from 9 AM to 1 PM.",
+      "date": "2025-11-10T00:00:00.000Z",
+      "visibility": "public"
     },
     {
-      "_id": "6730b0f2c5f8a1b012000002",
-      "name": "Sneha Kapoor",
-      "role": "Alumni",
-      "message": "Best school experience ever! Helped me grow academically and personally."
+      "_id": "6730aff2c5f8a1b011000003",
+      "title": "Exam Schedule",
+      "content": "Mid-term exams from Nov 15 to Nov 30. Check timetable.",
+      "date": "2025-11-05T00:00:00.000Z",
+      "visibility": "public"
+    },
+    {
+      "_id": "6730aff2c5f8a1b011000004",
+      "title": "Library Renovation",
+      "content": "Library closed for renovation from Nov 20 to Nov 25.",
+      "date": "2025-11-18T00:00:00.000Z",
+      "visibility": "public"
+    },
+    {
+      "_id": "6730aff2c5f8a1b011000005",
+      "title": "Fee Payment Reminder",
+      "content": "Last date for fee submission is Nov 30. Late fee applicable.",
+      "date": "2025-11-25T00:00:00.000Z",
+      "visibility": "public"
     }
   ],
 
-  "contactMessage":[
-  {
-    "_id": "672a7a2f1b2e2a0012345671",
-    "studentId": "672a7a2f1b2e2a0011111111",
-    "teacherId": "672a7a2f1b2e2a0022222222",
-    "type": "inquiry",
-    "message": "Can you please clarify the syllabus for the upcoming science exam?",
-    "status": "pending",
-    "date": "2025-11-01T10:30:00.000Z",
-    "createdAt": "2025-11-01T10:30:00.000Z",
-    "updatedAt": "2025-11-01T10:30:00.000Z"
-  },
-  {
-    "_id": "672a7a2f1b2e2a0012345672",
-    "studentId": "672a7a2f1b2e2a0011111112",
-    "teacherId": "672a7a2f1b2e2a0022222223",
-    "type": "complaint",
-    "message": "The classroom projector has not been working for the last week.",
-    "status": "read",
-    "date": "2025-10-29T09:15:00.000Z",
-    "createdAt": "2025-10-29T09:15:00.000Z",
-    "updatedAt": "2025-10-30T12:00:00.000Z"
-  },
-  {
-    "_id": "672a7a2f1b2e2a0012345673",
-    "studentId": "672a7a2f1b2e2a0011111113",
-    "teacherId": "672a7a2f1b2e2a0022222224",
-    "type": "feedback",
-    "message": "The new online portal is very helpful and easy to use.",
-    "status": "resolved",
-    "date": "2025-10-20T14:45:00.000Z",
-    "createdAt": "2025-10-20T14:45:00.000Z",
-    "updatedAt": "2025-10-25T10:00:00.000Z"
-  },
-  {
-    "_id": "672a7a2f1b2e2a0012345674",
-    "studentId": "672a7a2f1b2e2a0011111114",
-    "teacherId": "672a7a2f1b2e2a0022222225",
-    "type": "inquiry",
-    "message": "When will the annual sports event be scheduled?",
-    "status": "pending",
-    "date": "2025-11-02T08:00:00.000Z",
-    "createdAt": "2025-11-02T08:00:00.000Z",
-    "updatedAt": "2025-11-02T08:00:00.000Z"
-  },
-  {
-    "_id": "672a7a2f1b2e2a0012345675",
-    "studentId": "672a7a2f1b2e2a0011111115",
-    "teacherId": "672a7a2f1b2e2a0022222226",
-    "type": "complaint",
-    "message": "The water cooler on the second floor is leaking.",
-    "status": "resolved",
-    "date": "2025-10-27T07:30:00.000Z",
-    "createdAt": "2025-10-27T07:30:00.000Z",
-    "updatedAt": "2025-10-28T10:45:00.000Z"
-  }
-]
-
+  "contactMessages": [
+    {
+      "_id": "672a7a2f1b2e2a0012345671",
+      "studentId": "6730a9f2c5f8a1b005000001",
+      "teacherId": "6730a7f2c5f8a1b003000003",
+      "type": "inquiry",
+      "message": "Can you please clarify the syllabus for the upcoming science exam?",
+      "status": "pending",
+      "date": "2025-11-01T10:30:00.000Z"
+    },
+    {
+      "_id": "672a7a2f1b2e2a0012345672",
+      "studentId": "6730a9f2c5f8a1b005000002",
+      "teacherId": "6730a7f2c5f8a1b003000004",
+      "type": "complaint",
+      "message": "The classroom projector has not been working for the last week.",
+      "status": "read",
+      "date": "2025-10-29T09:15:00.000Z"
+    },
+    {
+      "_id": "672a7a2f1b2e2a0012345673",
+      "studentId": "6730a9f2c5f8a1b005000003",
+      "teacherId": "6730a7f2c5f8a1b003000001",
+      "type": "feedback",
+      "message": "The new online portal is very helpful and easy to use.",
+      "status": "resolved",
+      "date": "2025-10-20T14:45:00.000Z"
+    },
+    {
+      "_id": "672a7a2f1b2e2a0012345674",
+      "studentId": "6730a9f2c5f8a1b005000004",
+      "teacherId": "6730a7f2c5f8a1b003000003",
+      "type": "inquiry",
+      "message": "When will the annual sports event be scheduled?",
+      "status": "pending",
+      "date": "2025-11-02T08:00:00.000Z"
+    },
+    {
+      "_id": "672a7a2f1b2e2a0012345675",
+      "studentId": "6730a9f2c5f8a1b005000005",
+      "teacherId": "6730a7f2c5f8a1b003000004",
+      "type": "complaint",
+      "message": "The water cooler on the second floor is leaking.",
+      "status": "resolved",
+      "date": "2025-10-27T07:30:00.000Z"
+    },
+    {
+      "_id": "672a7a2f1b2e2a0012345676",
+      "studentId": "6730a9f2c5f8a1b005000006",
+      "teacherId": "6730a7f2c5f8a1b003000001",
+      "type": "feedback",
+      "message": "The math worksheets are very helpful for practice.",
+      "status": "read",
+      "date": "2025-11-03T12:00:00.000Z"
+    }
+  ]
 }

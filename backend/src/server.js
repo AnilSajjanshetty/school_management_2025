@@ -15,7 +15,7 @@ import examRoutes from "./routes/exams.js";
 import progressRoutes from "./routes/progress.js";
 import connectDB from "./config/db.js";
 import studentDashboardRoutes from "./routes/studentRoutes.js";
-import classTeqacherDashboardRoutes from "./routes/clasteacher.js";
+import clasteacherRoutes from "./routes/clasteacher.js";
 dotenv.config();
 
 const app = express();
@@ -28,7 +28,7 @@ app.use("/api", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/teachers", teacherRoutes);
-app.use("/api/class-teacher", classTeqacherDashboardRoutes);
+app.use("/api/classTeacher", clasteacherRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/testimonials", testimonialRoutes);
