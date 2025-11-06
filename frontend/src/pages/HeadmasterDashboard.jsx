@@ -11,6 +11,8 @@ import { AddTeacherForm } from "../components/Forms/AddTeacherForm";
 import { AddStudentForm } from "../components/Forms/AddStudentForm";
 import { Menu, X } from "lucide-react";
 import axiosInstance from "../config/axiosInstance";
+import AttendanceSection from "../components/graph/AttendanceSection";
+import ExamPerformance from "../components/graph/ExamPerformance";
 
 export const HeadmasterDashboard = ({ onLogout }) => {
     // ✅ Separate states for each dataset
@@ -70,7 +72,7 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                     axiosInstance.get("/classes").catch(() => ({ data: [] })),
                     axiosInstance.get("/students").catch(() => ({ data: [] })),
                     axiosInstance.get("/teachers").catch(() => ({ data: [] })),
-                    axiosInstance.get("/attendance").catch(() => ({ data: [] })),
+                    axiosInstance.get("/attendance/all-classes").catch(() => ({ data: [] })),
                     axiosInstance.get("/announcements").catch(() => ({ data: [] })),
                     axiosInstance.get("/events").catch(() => ({ data: [] })),
                     axiosInstance.get("/testimonials").catch(() => ({ data: [] })),
@@ -419,103 +421,17 @@ export const HeadmasterDashboard = ({ onLogout }) => {
 
                             {/* Attendance Graph */}
                             <div className="bg-white p-4 lg:p-6 rounded-xl shadow mb-6 lg:mb-8">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
-                                    <h3 className="text-lg lg:text-xl font-bold text-indigo-700">Attendance Trend</h3>
-                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                        <select
-                                            value={selectedAttendanceClass}
-                                            onChange={(e) => setSelectedAttendanceClass(e.target.value)}
-                                            className="p-2 border border-gray-300 rounded-lg text-xs lg:text-sm w-full sm:w-auto"
-                                        >
-                                            <option value="">Select Class</option>
-                                            {classes.map((c) => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.name} {c.section}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <button
-                                            onClick={() => setAttendanceView(attendanceView === "monthly" ? "daily" : "monthly")}
-                                            className="px-3 lg:px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs lg:text-sm hover:bg-indigo-700"
-                                        >
-                                            {attendanceView === "monthly" ? "Daily" : "Monthly"}
-                                        </button>
-                                    </div>
-                                </div>
-                                {selectedAttendanceClass ? (
-                                    <ResponsiveContainer width="100%" height={250}>
-                                        <LineChart data={attendanceData}>
-                                            <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                                            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                                            <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
-                                            />
-                                            <Legend wrapperStyle={{ fontSize: '12px' }} />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="attendance"
-                                                stroke="#4f46e5"
-                                                strokeWidth={2}
-                                                dot={{ fill: "#4f46e5", r: 4 }}
-                                                name="Attendance %"
-                                            />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <p className="text-center text-gray-500 py-10 text-sm">Select a class to view attendance.</p>
-                                )}
+                                <AttendanceSection
+                                    attendanceRecords={attendance}
+                                    classes={classes}
+                                />
                             </div>
+
 
                             {/* Exam Performance */}
                             <div className="bg-white p-4 lg:p-6 rounded-xl shadow">
                                 <h3 className="text-lg lg:text-xl font-bold text-amber-700 mb-5">Exam Performance</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 mb-5">
-                                    <select
-                                        value={selectedExamClass}
-                                        onChange={(e) => {
-                                            setSelectedExamClass(e.target.value);
-                                            setSelectedExamId("");
-                                        }}
-                                        className="p-2 lg:p-3 border border-gray-300 rounded-lg text-xs lg:text-sm"
-                                    >
-                                        <option value="">Select Class</option>
-                                        {classes.map((c) => (
-                                            <option key={c.id} value={c.id}>
-                                                {c.name} {c.section}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        value={selectedExamId}
-                                        onChange={(e) => setSelectedExamId(e.target.value)}
-                                        className="p-2 lg:p-3 border border-gray-300 rounded-lg text-xs lg:text-sm"
-                                        disabled={!selectedExamClass}
-                                    >
-                                        <option value="">Select Exam</option>
-                                        {examsForClass.map((ex) => (
-                                            <option key={ex.id} value={ex.id}>
-                                                {ex.title} ({ex.date})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                {selectedExamId ? (
-                                    <ResponsiveContainer width="100%" height={250}>
-                                        <BarChart data={examGraphData}>
-                                            <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                                            <XAxis dataKey="subject" tick={{ fontSize: 12 }} />
-                                            <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
-                                            />
-                                            <Legend wrapperStyle={{ fontSize: '12px' }} />
-                                            <Bar dataKey="avgMarks" fill="#f59e0b" radius={[8, 8, 0, 0]} name="Avg Marks" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <p className="text-center text-gray-500 py-10 text-sm">Select class and exam to view results.</p>
-                                )}
+                                <ExamPerformance exams={exams} classes={classes} />
                             </div>
                         </div>
                     )}

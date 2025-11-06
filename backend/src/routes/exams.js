@@ -8,12 +8,7 @@ import {
 
 const router = express.Router();
 
-router.get(
-  "/",
-  protect,
-  authorize("headmaster", "class_teacher", "teacher", "student"),
-  getExams
-);
+router.get("/", getExams);
 router.post("/", protect, authorize("headmaster", "teacher"), createExam);
 router.post("/:id/results", protect, authorize("teacher"), addResults);
 

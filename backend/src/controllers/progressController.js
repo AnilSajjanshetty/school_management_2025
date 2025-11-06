@@ -1,15 +1,14 @@
 import Progress from "../models/Progress.js";
 
-export const getProgress = async (req, res) => {
+export const getAllProgress = async (req, res) => {
   try {
-    const { studentId } = req.query;
-    const progress = await Progress.find({ studentId })
+    const progress = await Progress.find()
       .populate("studentId", "name")
       .populate("classId", "name")
       .sort({ date: -1 });
     res.json(progress);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
