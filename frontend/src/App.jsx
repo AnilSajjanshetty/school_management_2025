@@ -4,10 +4,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { HeadmasterDashboard } from "./pages/HeadmasterDashboard";
-import { ClassTeacherDashboard } from "./pages/ClassTeacherDashboard";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { StudentDashboard } from "./pages/StudentDashboard";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import { ClassTeacherDashboard } from "./pages/ClassTeacherDashboard";
 
 const App = () => {
   const user = JSON.parse(localStorage.getItem("user"));
