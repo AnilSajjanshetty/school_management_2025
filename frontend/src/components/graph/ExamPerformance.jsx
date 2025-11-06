@@ -39,10 +39,7 @@ const ExamPerformance = ({ exams = [], classes = [] }) => {
     }, [selectedExamId, exams]);
 
     return (
-        <div className="bg-white p-4 lg:p-6 rounded-xl shadow">
-            <h3 className="text-lg lg:text-xl font-bold text-amber-700 mb-5">
-                Exam Performance
-            </h3>
+        <div className="bg-white  lg:p-6 rounded-xl ">
 
             {/* Dropdowns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 mb-5">

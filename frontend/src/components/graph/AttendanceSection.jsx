@@ -147,11 +147,9 @@ const AttendanceSection = ({ attendanceRecords = [], classes = [] }) => {
         view === "yearly" ? "Month" : view === "monthly" ? "Day of Month" : "Date";
 
     return (
-        <div className="bg-white p-4 lg:p-6 rounded-xl shadow mb-6 lg:mb-8">
+        <div className="bg-white p-4 lg:p-6 rounded-xl  mb-6 lg:mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
-                <h3 className="text-lg lg:text-xl font-bold text-indigo-700">
-                    Attendance Trend
-                </h3>
+
 
                 <div className="flex gap-2 w-full sm:w-auto">
                     <select
