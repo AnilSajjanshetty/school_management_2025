@@ -126,6 +126,16 @@
       "name": "10th Grade",
       "section": "A",
       "classTeacherId": "6730a7f2c5f8a1b003000003",
+      "subjectTeachers": [
+    {
+      "teacherId": "6730a7f2c5f8a1b003000002",   
+      "subjectId": "6730a6f2c5f8a1b002000003"
+    },
+    {
+      "teacherId": "6730a7f2c5f8a1b003000001",   
+      "subjectId": "6730a6f2c5f8a1b002000001"
+    }
+  ],
       "subjects": [
         "6730a6f2c5f8a1b002000001",
         "6730a6f2c5f8a1b002000002",
@@ -191,8 +201,8 @@
     {
       "_id": "6730aaf2c5f8a1b006000001",
       "classId": "6730a8f2c5f8a1b004000001",
-      "teacherId": "6730a7f2c5f8a1b003000003",
-      "subjectId": "6730a6f2c5f8a1b002000001",
+      "teacherId": "6730a7f2c5f8a1b003000002",   
+      "subjectId": "6730a6f2c5f8a1b002000003",  
       "day": "Monday",
       "period": 1,
       "startTime": "09:00 AM",
