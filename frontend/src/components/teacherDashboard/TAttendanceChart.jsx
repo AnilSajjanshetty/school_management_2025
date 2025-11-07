@@ -2,18 +2,17 @@
 import React, { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function TAttendanceChart({ attendance, selectedClass, setSelectedClass, teacherClasses }) {
-    const [view, setView] = useState("daily"); // daily | monthly | yearly
+export default function TAttendanceChart({ attendance, selectedClass, setSelectedClass, classes }) {
+    const [view, setView] = useState("daily");
     const [year, setYear] = useState("");
 
+    const classList = classes || [];
+
     const years = useMemo(() => {
-        const ys = [...new Set(
-            Object.values(attendance)
-                .flat()
-                .map(r => r.date.slice(0, 4))
-        )].sort().reverse();
+        const records = selectedClass ? attendance[selectedClass.id] || [] : [];
+        const ys = [...new Set(records.map(r => r.date.slice(0, 4)))].sort().reverse();
         return ys.length ? ys : [new Date().getFullYear().toString()];
-    }, [attendance]);
+    }, [attendance, selectedClass]);
 
     const data = useMemo(() => {
         if (!selectedClass || !attendance[selectedClass.id]) return [];
@@ -49,9 +48,8 @@ export default function TAttendanceChart({ attendance, selectedClass, setSelecte
     }, [attendance, selectedClass, view, year]);
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                <h3 className="text-xl font-bold text-indigo-700">Attendance Trend</h3>
                 <div className="flex gap-2 flex-wrap">
                     <select
                         value={view}
@@ -77,12 +75,17 @@ export default function TAttendanceChart({ attendance, selectedClass, setSelecte
 
             <select
                 value={selectedClass?.id || ""}
-                onChange={e => setSelectedClass(teacherClasses.find(c => c.id === e.target.value) || null)}
+                onChange={e => {
+                    const cls = classList.find(c => c.id === e.target.value);
+                    setSelectedClass(cls || null);
+                }}
                 className="w-full mb-4 p-2 border rounded"
             >
                 <option value="">Select Class</option>
-                {teacherClasses.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} {c.section}</option>
+                {classList.map(c => (
+                    <option key={c.id} value={c.id}>
+                        {c.name} {c.section}
+                    </option>
                 ))}
             </select>
 

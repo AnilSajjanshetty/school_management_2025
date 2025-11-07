@@ -34,7 +34,8 @@ export const getTeacherDashboard = async (req, res) => {
     // Students
     const students = await Student.find({ classId: { $in: classIds } })
       .populate("userId", "name email")
-      .populate("classId", "name section");
+      .populate("classId", "name section")
+      .lean();
 
     // FIX 2: Attendance by class + date (aggregated)
     const attendanceRecords = await Attendance.find({
@@ -66,38 +67,28 @@ export const getTeacherDashboard = async (req, res) => {
     });
 
     // Exams
-    const exams = await Exam.find({ classId: { $in: classIds } }).populate(
-      "classId",
-      "name section"
-    );
+    const exams = await Exam.find({
+      classId: { $in: teacherClasses.map((c) => c._id) },
+    }).populate("classId", "name section");
 
-    // FIX 3: Exam results with subject-wise averages
-    const examResults = exams.map((exam) => {
-      const results = exam.results || [];
-      const subject = exam.subject;
-      const totalMarks = results.reduce(
-        (sum, r) => sum + (r.marksObtained || 0),
-        0
-      );
-      const avg =
-        results.length > 0 ? Math.round(totalMarks / results.length) : 0;
-
-      return {
-        examId: exam._id,
-        examTitle: exam.title,
-        classId: exam.classId._id,
-        className: `${exam.classId.name} ${exam.classId.section || ""}`.trim(),
-        subject: exam.subject,
-        date: exam.date,
-        averageMarks: avg,
-        studentCount: results.length,
-        results: results.map((r) => ({
-          studentId: r.studentId,
-          marksObtained: r.marksObtained,
-          grade: r.grade,
-        })),
-      };
-    });
+    const examData = exams.map((exam) => ({
+      id: exam._id,
+      title: exam.title,
+      subject: exam.subject,
+      classId: exam.classId._id,
+      className: `${exam.classId.name} ${exam.classId.section}`,
+      date: exam.date,
+      totalMarks: exam.totalMarks,
+      results: exam.results.map((r) => ({
+        id: `${exam._id}-${r.studentId}`,
+        studentId: r.studentId,
+        studentName:
+          students.find((s) => s._id.toString() === r.studentId.toString())
+            ?.name || "Unknown",
+        marks: r.marksObtained,
+        grade: r.grade,
+      })),
+    }));
 
     // Timetable
     const timetableEntries = await Timetable.find({ teacherId: teacher._id })
@@ -200,8 +191,8 @@ export const getTeacherDashboard = async (req, res) => {
       })),
       students: students.map((s) => ({
         id: s._id,
-        name: s.userId.name,
-        email: s.userId.email,
+        name: s.userId?.name || "Unknown Student",
+        email: s.userId?.email || "N/A",
         classId: s.classId._id,
         className: s.classId.name,
         section: s.classId.section,
@@ -222,17 +213,7 @@ export const getTeacherDashboard = async (req, res) => {
         public: e.public,
         classId: e.classId,
       })),
-      exams: exams.map((e) => ({
-        id: e._id,
-        title: e.title,
-        classId: e.classId._id,
-        className: `${e.classId.name} ${e.classId.section || ""}`.trim(),
-        subject: e.subject,
-        date: e.date,
-        duration: e.duration,
-        room: e.room,
-      })),
-      examResults,
+      exams: examData,
       attendance: attendanceByClass,
       contactMessages: contactMessages.map((m) => ({
         id: m._id,

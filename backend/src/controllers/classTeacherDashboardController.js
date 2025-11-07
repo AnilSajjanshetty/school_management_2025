@@ -14,99 +14,169 @@ export const getTeacherDashboard = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Find teacher
+    // ---------- 1. BASIC TEACHER INFO ----------
     const teacher = await Teacher.findOne({ userId }).populate("subjects");
-    if (!teacher) {
-      return res.status(404).json({ message: "Teacher not found" });
-    }
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
-    // Find user details
     const user = await User.findById(userId);
 
-    // Find class where teacher is class teacher
-    const myClass = await Class.findOne({ classTeacherId: teacher._id })
-      .populate("subjects");
+    // ---------- 2. MY CLASS ----------
+    const myClass = await Class.findOne({
+      classTeacherId: teacher._id,
+    }).populate("subjects");
+    const myClassStudentsCount = myClass
+      ? await Student.countDocuments({ classId: myClass._id })
+      : 0;
 
-    // Find all classes where teacher teaches
-    const teachingClasses = await Timetable.find({ teacherId: teacher._id })
-      .populate("classId", "name section")
-      .populate("subjectId", "name")
-      .distinct("classId");
+    // ---------- 3. TEACHING CLASSES ----------
+    const teachingClassIds = await Timetable.find({
+      teacherId: teacher._id,
+    }).distinct("classId");
 
-    const uniqueTeachingClasses = await Class.find({
-      _id: { $in: teachingClasses }
+    const teachingClasses = await Class.find({
+      _id: { $in: teachingClassIds },
     }).populate("subjects");
 
-    // Get students count for my class
-    let myClassStudentsCount = 0;
-    if (myClass) {
-      myClassStudentsCount = await Student.countDocuments({ classId: myClass._id });
-    }
+    const allClassIds = teachingClassIds.concat(myClass?._id).filter(Boolean);
 
-    // Get total students taught
-    const allTeachingClassIds = uniqueTeachingClasses.map(c => c._id);
+    // ---------- 4. STUDENT COUNTS ----------
     const totalStudentsTaught = await Student.countDocuments({
-      classId: { $in: allTeachingClassIds }
+      classId: { $in: allClassIds },
     });
 
-    // Get upcoming exams (next 30 days)
+    // ---------- 5. UPCOMING EXAMS ----------
     const upcomingExams = await Exam.find({
-      classId: { $in: [...allTeachingClassIds, myClass?._id].filter(Boolean) },
-      date: { $gte: new Date(), $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }
+      classId: { $in: allClassIds },
+      date: {
+        $gte: new Date(),
+        $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
     })
       .populate("classId", "name section")
       .sort({ date: 1 })
       .limit(5);
 
-    // Get recent attendance records
+    // ---------- 6. RECENT ATTENDANCE ----------
     const recentAttendance = await Attendance.find({
-      classId: { $in: [...allTeachingClassIds, myClass?._id].filter(Boolean) }
+      classId: { $in: allClassIds },
     })
       .populate("classId", "name section")
       .populate("studentId", "rollNumber")
       .sort({ date: -1 })
       .limit(10);
 
-    // Calculate average attendance for my class
+    // ---------- 7. AVG ATTENDANCE (my class only) ----------
     let myClassAvgAttendance = 0;
     if (myClass) {
-      const classAttendance = await Attendance.find({ classId: myClass._id });
-      if (classAttendance.length > 0) {
-        const totalPresent = classAttendance.reduce((sum, rec) => sum + (rec.present || 0), 0);
-        const totalTotal = classAttendance.reduce((sum, rec) => sum + ((rec.present || 0) + (rec.absent || 0)), 0);
-        myClassAvgAttendance = totalTotal > 0 ? Math.round((totalPresent / totalTotal) * 100) : 0;
-      }
+      const att = await Attendance.find({ classId: myClass._id });
+      const totalPresent = att.reduce((s, r) => s + (r.present || 0), 0);
+      const totalTotal = att.reduce(
+        (s, r) => s + ((r.present || 0) + (r.absent || 0)),
+        0
+      );
+      myClassAvgAttendance = totalTotal
+        ? Math.round((totalPresent / totalTotal) * 100)
+        : 0;
     }
 
+    // ---------- 8. RECENT ANNOUNCEMENTS ----------
+    const recentAnnouncements = await Announcement.find()
+      .sort({ date: -1 })
+      .limit(5)
+      .select("title date");
+
+    // ---------- 9. UPCOMING EVENTS ----------
+    const upcomingEvents = await Event.find({
+      public: true,
+      date: { $gte: new Date() },
+    })
+      .sort({ date: 1 })
+      .limit(5)
+      .select("title date");
+
+    // ---------- 10. ATTENDANCE TREND (last 7 days) ----------
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const dailyAtt = await Attendance.aggregate([
+      {
+        $match: { classId: { $in: allClassIds }, date: { $gte: sevenDaysAgo } },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          present: { $sum: { $cond: ["$present", 1, 0] } },
+          total: { $sum: { $add: ["$present", "$absent"] } },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const attendanceTrend = dailyAtt.map((d) => ({
+      date: new Date(d._id).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      percentage: d.total ? Math.round((d.present / d.total) * 100) : 0,
+    }));
+
+    // ---------- 11. RESPONSE ----------
     res.json({
       user: {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        avatar: user.profilePic
+        avatar: user.profilePic,
       },
+
       teacher,
-      myClass: myClass ? {
-        _id: myClass._id,
-        name: myClass.name,
-        section: myClass.section,
-        studentsCount: myClassStudentsCount,
-        subjects: myClass.subjects,
-        avgAttendance: myClassAvgAttendance
-      } : null,
-      teachingClasses: uniqueTeachingClasses.map(c => ({
+
+      myClass: myClass
+        ? {
+            _id: myClass._id,
+            name: myClass.name,
+            section: myClass.section,
+            studentsCount: myClassStudentsCount,
+            subjects: myClass.subjects,
+            avgAttendance: myClassAvgAttendance,
+          }
+        : null,
+
+      teachingClasses: teachingClasses.map((c) => ({
         _id: c._id,
         name: c.name,
         section: c.section,
-        subjects: c.subjects
+        subjects: c.subjects,
       })),
+
+      // ---------- OVERVIEW-TAB FRIENDLY FIELDS ----------
+      totalStudents: totalStudentsTaught,
+      avgAttendance: myClassAvgAttendance,
+      pendingTasks: 0, // you can add a real count later
+      examsScheduled: upcomingExams.length,
+
+      attendanceTrend, // chart data
+      recentAnnouncements: recentAnnouncements.map((a) => ({
+        title: a.title,
+        date: new Date(a.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+      })),
+      upcomingEvents: upcomingEvents.map((e) => ({
+        title: e.title,
+        date: new Date(e.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+      })),
+
+      // ---------- LEGACY FIELDS (kept for other tabs) ----------
       stats: {
         totalStudentsTaught,
         myClassStudentsCount,
-        teachingClassesCount: uniqueTeachingClasses.length,
-        upcomingExamsCount: upcomingExams.length
+        teachingClassesCount: teachingClasses.length,
+        upcomingExamsCount: upcomingExams.length,
       },
-      upcomingExams: upcomingExams.map(exam => ({
+      upcomingExams: upcomingExams.map((exam) => ({
         _id: exam._id,
         title: exam.title,
         subject: exam.subject,
@@ -114,17 +184,17 @@ export const getTeacherDashboard = async (req, res) => {
         className: `${exam.classId.name} ${exam.classId.section || ""}`.trim(),
         totalMarks: exam.totalMarks,
         duration: exam.duration,
-        room: exam.room
+        room: exam.room,
       })),
-      recentAttendance: recentAttendance.map(att => ({
+      recentAttendance: recentAttendance.map((att) => ({
         _id: att._id,
         date: att.date,
         className: `${att.classId.name} ${att.classId.section || ""}`.trim(),
         present: att.present || 0,
         absent: att.absent || 0,
         status: att.status,
-        studentRoll: att.studentId?.rollNumber
-      }))
+        studentRoll: att.studentId?.rollNumber,
+      })),
     });
   } catch (error) {
     console.error("Error fetching teacher dashboard:", error);
@@ -142,8 +212,9 @@ export const getMyClassDetails = async (req, res) => {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
-    const myClass = await Class.findOne({ classTeacherId: teacher._id })
-      .populate("subjects");
+    const myClass = await Class.findOne({
+      classTeacherId: teacher._id,
+    }).populate("subjects");
 
     if (!myClass) {
       return res.status(404).json({ message: "No class assigned" });
@@ -158,29 +229,40 @@ export const getMyClassDetails = async (req, res) => {
     const studentsWithStats = await Promise.all(
       students.map(async (student) => {
         const attendanceRecords = await Attendance.find({
-          studentId: student._id
+          studentId: student._id,
         });
 
-        const presentCount = attendanceRecords.filter(a => a.status === "present").length;
+        const presentCount = attendanceRecords.filter(
+          (a) => a.status === "present"
+        ).length;
         const totalRecords = attendanceRecords.length;
-        const attendancePercentage = totalRecords > 0 
-          ? Math.round((presentCount / totalRecords) * 100) 
-          : 0;
+        const attendancePercentage =
+          totalRecords > 0
+            ? Math.round((presentCount / totalRecords) * 100)
+            : 0;
 
         // Get exam results
         const exams = await Exam.find({
           classId: myClass._id,
-          "results.studentId": student._id
+          "results.studentId": student._id,
         });
 
         let avgMarks = 0;
         if (exams.length > 0) {
           const totalMarks = exams.reduce((sum, exam) => {
-            const result = exam.results.find(r => r.studentId.toString() === student._id.toString());
+            const result = exam.results.find(
+              (r) => r.studentId.toString() === student._id.toString()
+            );
             return sum + (result?.marksObtained || 0);
           }, 0);
-          const totalPossible = exams.reduce((sum, exam) => sum + exam.totalMarks, 0);
-          avgMarks = totalPossible > 0 ? Math.round((totalMarks / totalPossible) * 100) : 0;
+          const totalPossible = exams.reduce(
+            (sum, exam) => sum + exam.totalMarks,
+            0
+          );
+          avgMarks =
+            totalPossible > 0
+              ? Math.round((totalMarks / totalPossible) * 100)
+              : 0;
         }
 
         return {
@@ -193,7 +275,7 @@ export const getMyClassDetails = async (req, res) => {
           admissionDate: student.admissionDate,
           attendancePercentage,
           avgMarks,
-          totalAttendanceRecords: totalRecords
+          totalAttendanceRecords: totalRecords,
         };
       })
     );
@@ -209,17 +291,20 @@ export const getMyClassDetails = async (req, res) => {
         name: myClass.name,
         section: myClass.section,
         subjects: myClass.subjects,
-        totalStudents: students.length
+        totalStudents: students.length,
       },
       students: studentsWithStats,
-      recentAttendance: classAttendance.map(att => ({
+      recentAttendance: classAttendance.map((att) => ({
         _id: att._id,
         date: att.date,
         present: att.present || 0,
         absent: att.absent || 0,
         total: (att.present || 0) + (att.absent || 0),
-        percentage: ((att.present || 0) / ((att.present || 0) + (att.absent || 0)) * 100).toFixed(1)
-      }))
+        percentage: (
+          ((att.present || 0) / ((att.present || 0) + (att.absent || 0))) *
+          100
+        ).toFixed(1),
+      })),
     });
   } catch (error) {
     console.error("Error fetching my class details:", error);
@@ -244,8 +329,8 @@ export const getTeachingClasses = async (req, res) => {
 
     // Group by class
     const classMap = new Map();
-    
-    timetableEntries.forEach(entry => {
+
+    timetableEntries.forEach((entry) => {
       const classId = entry.classId._id.toString();
       if (!classMap.has(classId)) {
         classMap.set(classId, {
@@ -254,10 +339,10 @@ export const getTeachingClasses = async (req, res) => {
           section: entry.classId.section,
           subjects: new Set(),
           periodsCount: 0,
-          schedule: []
+          schedule: [],
         });
       }
-      
+
       const classData = classMap.get(classId);
       classData.subjects.add(entry.subjectId.name);
       classData.periodsCount++;
@@ -267,23 +352,35 @@ export const getTeachingClasses = async (req, res) => {
         subject: entry.subjectId.name,
         startTime: entry.startTime,
         endTime: entry.endTime,
-        room: entry.room
+        room: entry.room,
       });
     });
 
     // Convert to array and get student counts
     const teachingClasses = await Promise.all(
       Array.from(classMap.values()).map(async (classData) => {
-        const studentsCount = await Student.countDocuments({ classId: classData._id });
-        
+        const studentsCount = await Student.countDocuments({
+          classId: classData._id,
+        });
+
         return {
           ...classData,
           subjects: Array.from(classData.subjects),
           studentsCount,
           schedule: classData.schedule.sort((a, b) => {
-            const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day) || a.period - b.period;
-          })
+            const dayOrder = [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+            ];
+            return (
+              dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day) ||
+              a.period - b.period
+            );
+          }),
         };
       })
     );
@@ -311,21 +408,30 @@ export const getTeacherTimetable = async (req, res) => {
       .sort({ day: 1, period: 1 });
 
     // Group by day
-    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayOrder = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const groupedTimetable = {};
 
-    dayOrder.forEach(day => {
+    dayOrder.forEach((day) => {
       groupedTimetable[day] = timetable
-        .filter(entry => entry.day === day)
-        .map(entry => ({
+        .filter((entry) => entry.day === day)
+        .map((entry) => ({
           _id: entry._id,
           period: entry.period,
           subject: entry.subjectId.name,
           subjectCode: entry.subjectId.code,
-          className: `${entry.classId.name} ${entry.classId.section || ""}`.trim(),
+          className: `${entry.classId.name} ${
+            entry.classId.section || ""
+          }`.trim(),
           startTime: entry.startTime,
           endTime: entry.endTime,
-          room: entry.room
+          room: entry.room,
         }));
     });
 
@@ -353,8 +459,7 @@ export const getAnnouncements = async (req, res) => {
 // Get events
 export const getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ public: true })
-      .sort({ date: 1 });
+    const events = await Event.find({ public: true }).sort({ date: 1 });
 
     res.json(events);
   } catch (error) {
@@ -377,19 +482,20 @@ export const getTeacherExams = async (req, res) => {
     const myClass = await Class.findOne({ classTeacherId: teacher._id });
 
     // Get teaching classes
-    const teachingClasses = await Timetable.find({ teacherId: teacher._id })
-      .distinct("classId");
+    const teachingClasses = await Timetable.find({
+      teacherId: teacher._id,
+    }).distinct("classId");
 
     const allClassIds = [...teachingClasses];
     if (myClass) allClassIds.push(myClass._id);
 
     const exams = await Exam.find({
-      classId: { $in: allClassIds }
+      classId: { $in: allClassIds },
     })
       .populate("classId", "name section")
       .sort({ date: -1 });
 
-    const formattedExams = exams.map(exam => ({
+    const formattedExams = exams.map((exam) => ({
       _id: exam._id,
       title: exam.title,
       subject: exam.subject,
@@ -399,7 +505,7 @@ export const getTeacherExams = async (req, res) => {
       totalMarks: exam.totalMarks,
       room: exam.room,
       resultsCount: exam.results.length,
-      isPast: new Date(exam.date) < new Date()
+      isPast: new Date(exam.date) < new Date(),
     }));
 
     res.json(formattedExams);

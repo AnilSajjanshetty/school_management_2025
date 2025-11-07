@@ -24,7 +24,6 @@ export const TeacherDashboard = ({ onLogout }) => {
     const [announcements, setAnnouncements] = useState([]);
     const [events, setEvents] = useState([]);
     const [exams, setExams] = useState([]);
-    const [examResults, setExamResults] = useState([]);
     const [contactMessages, setContactMessages] = useState([]);
     const [attendance, setAttendance] = useState({}); // { classId: [...] }
     const [teacherTimetables, setTeacherTimetables] = useState([]);
@@ -72,7 +71,6 @@ export const TeacherDashboard = ({ onLogout }) => {
                 setAnnouncements(data.announcements || []);
                 setEvents(data.events || []);
                 setExams(data.exams || []);
-                setExamResults(data.examResults || []);
                 setContactMessages(data.contactMessages || []);
                 setAttendance(data.attendance || {}); // { classId: [...] }
                 setTeacherTimetables(data.timetable ? [data.timetable] : []);
@@ -151,7 +149,6 @@ export const TeacherDashboard = ({ onLogout }) => {
                 ...progressData,
                 studentId: selectedStudent.id,
             });
-            setExamResults(prev => [...prev, data]);
             setShowProgress(false);
         } catch (error) {
             console.error("Failed to add progress:", error);
@@ -189,7 +186,6 @@ export const TeacherDashboard = ({ onLogout }) => {
             selectedExam,
             setSelectedExam,
             exams,
-            examResults,
             setSelectedStudent,
             setShowProgress,
         };
