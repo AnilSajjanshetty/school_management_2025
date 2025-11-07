@@ -1,45 +1,84 @@
 // src/components/teacherDashboard/TAttendanceChart.jsx
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function TAttendanceChart({ attendance, selectedClass, setSelectedClass, teacherClasses, view = "monthly" }) {
+export default function TAttendanceChart({ attendance, selectedClass, setSelectedClass, teacherClasses }) {
+    const [view, setView] = useState("daily"); // daily | monthly | yearly
+    const [year, setYear] = useState("");
+
+    const years = useMemo(() => {
+        const ys = [...new Set(
+            Object.values(attendance)
+                .flat()
+                .map(r => r.date.slice(0, 4))
+        )].sort().reverse();
+        return ys.length ? ys : [new Date().getFullYear().toString()];
+    }, [attendance]);
+
     const data = useMemo(() => {
-        if (!selectedClass) return [];
-        const records = attendance.filter(a => a.classId === selectedClass.id);
-        if (records.length === 0) return [];
+        if (!selectedClass || !attendance[selectedClass.id]) return [];
+
+        let records = attendance[selectedClass.id];
+        if (year) records = records.filter(r => r.date.startsWith(year));
 
         if (view === "daily") {
-            return records
-                .map(a => ({
-                    date: a.date.split("-").slice(1).join("/"),
-                    attendance: a.total > 0 ? Math.round((a.present / a.total) * 100) : 0,
-                }))
-                .sort((a, b) => a.date.localeCompare(b.date));
+            return records.map(r => ({
+                label: new Date(r.date).toLocaleDateString("en", { month: "short", day: "numeric" }),
+                attendance: r.total > 0 ? Math.round((r.present / r.total) * 100) : 0
+            }));
         }
 
-        const map = new Map();
+        const map = {};
         records.forEach(r => {
-            const month = r.date.slice(0, 7);
-            const cur = map.get(month) || { present: 0, total: 0 };
-            cur.present += r.present;
-            cur.total += r.total;
-            map.set(month, cur);
+            const key = view === "monthly" ? r.date.slice(0, 7) : r.date.slice(0, 4);
+            if (!map[key]) map[key] = { present: 0, total: 0 };
+            map[key].present += r.present;
+            map[key].total += r.total;
         });
-        return Array.from(map.entries())
-            .map(([month, d]) => ({
-                month: new Date(month + "-01").toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
-                attendance: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0,
-            }))
-            .sort((a, b) => a.month.localeCompare(b.month));
-    }, [attendance, selectedClass, view]);
+
+        return Object.entries(map)
+            .map(([k, v]) => {
+                const val = v.total > 0 ? Math.round((v.present / v.total) * 100) : 0;
+                if (view === "monthly") {
+                    const date = new Date(k + "-01");
+                    return { label: date.toLocaleDateString("en", { month: "short", year: "2-digit" }), attendance: val };
+                }
+                return { label: k, attendance: val };
+            })
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [attendance, selectedClass, view, year]);
 
     return (
-        <div className="bg-white p-4 lg:p-6 rounded-xl shadow">
-            <h3 className="text-lg lg:text-xl font-bold text-indigo-700 mb-4">Attendance Trend</h3>
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                <h3 className="text-xl font-bold text-indigo-700">Attendance Trend</h3>
+                <div className="flex gap-2 flex-wrap">
+                    <select
+                        value={view}
+                        onChange={e => setView(e.target.value)}
+                        className="px-3 py-1.5 border rounded text-sm"
+                    >
+                        <option value="daily">Daily</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    {view !== "daily" && (
+                        <select
+                            value={year}
+                            onChange={e => setYear(e.target.value)}
+                            className="px-3 py-1.5 border rounded text-sm"
+                        >
+                            <option value="">All Years</option>
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    )}
+                </div>
+            </div>
+
             <select
                 value={selectedClass?.id || ""}
-                onChange={(e) => setSelectedClass(teacherClasses.find(c => c.id === e.target.value) || null)}
-                className="w-full mb-3 px-3 py-2 border rounded-lg text-sm"
+                onChange={e => setSelectedClass(teacherClasses.find(c => c.id === e.target.value) || null)}
+                className="w-full mb-4 p-2 border rounded"
             >
                 <option value="">Select Class</option>
                 {teacherClasses.map(c => (
@@ -48,21 +87,28 @@ export default function TAttendanceChart({ attendance, selectedClass, setSelecte
             </select>
 
             {selectedClass && data.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={data}>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey={view === "daily" ? "date" : "month"} tick={{ fontSize: 12 }} />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                        <Tooltip />
-                        <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        <Line type="monotone" dataKey="attendance" stroke="#10b981" name="Attendance %" strokeWidth={2} />
+                        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip formatter={(v) => `${v}%`} />
+                        <Legend />
+                        <Line
+                            type="monotone"
+                            dataKey="attendance"
+                            stroke="#10b981"
+                            strokeWidth={2}
+                            dot={{ fill: "#10b981" }}
+                            name="Attendance %"
+                        />
                     </LineChart>
                 </ResponsiveContainer>
             ) : selectedClass ? (
-                <p className="text-gray-500 italic text-sm">No attendance data.</p>
+                <p className="text-center py-12 text-gray-500 italic">No attendance data</p>
             ) : (
-                <p className="text-gray-500 italic text-sm">Please select a class.</p>
+                <p className="text-center py-12 text-gray-500 italic">Select a class</p>
             )}
         </div>
     );
-}   
+}

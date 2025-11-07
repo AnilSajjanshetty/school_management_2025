@@ -1,5 +1,5 @@
 // src/pages/TeacherDashboard.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import reaact, { useState, useEffect, useMemo } from "react";
 import TSidebar from "../components/teacherDashboard/TSidebar";
 import THeader from "../components/teacherDashboard/THeader";
 import TOverviewTab from "../components/teacherDashboard/TOverviewTab";
@@ -26,7 +26,7 @@ export const TeacherDashboard = ({ onLogout }) => {
     const [exams, setExams] = useState([]);
     const [examResults, setExamResults] = useState([]);
     const [contactMessages, setContactMessages] = useState([]);
-    const [attendance, setAttendance] = useState([]);
+    const [attendance, setAttendance] = useState({}); // { classId: [...] }
     const [teacherTimetables, setTeacherTimetables] = useState([]);
     const [dashboardLoading, setDashboardLoading] = useState(true);
 
@@ -42,6 +42,7 @@ export const TeacherDashboard = ({ onLogout }) => {
     const [showContactForm, setShowContactForm] = useState(false);
     const [showProgress, setShowProgress] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [statistics, setStatistics] = useState({});
 
     // === Fetch Dashboard Data ===
     useEffect(() => {
@@ -73,8 +74,9 @@ export const TeacherDashboard = ({ onLogout }) => {
                 setExams(data.exams || []);
                 setExamResults(data.examResults || []);
                 setContactMessages(data.contactMessages || []);
-                setAttendance(Object.values(data?.attendance || {}).flat());
+                setAttendance(data.attendance || {}); // { classId: [...] }
                 setTeacherTimetables(data.timetable ? [data.timetable] : []);
+                setStatistics(data.statistics || {});
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             } finally {
@@ -85,9 +87,15 @@ export const TeacherDashboard = ({ onLogout }) => {
         fetchDashboardData();
     }, []);
 
-    // === Derived Data ===
+    // === FIXED: Get teacher's classes using classTeacherId or subjectTeachers ===
     const teacherClasses = useMemo(() => {
-        return classes.filter(c => c.teacherId === user?.id);
+        if (!user?.id || !classes.length) return [];
+
+        return classes.filter(cls => {
+            const isClassTeacher = cls.classTeacherId === user.id;
+            const teachesSubject = cls.subjectTeachers?.some(st => st.teacherId === user.id);
+            return isClassTeacher || teachesSubject;
+        });
     }, [classes, user?.id]);
 
     // Auto-select first class
@@ -102,7 +110,7 @@ export const TeacherDashboard = ({ onLogout }) => {
         try {
             const { data } = await axiosInstance.post("/announcements", {
                 ...announcement,
-                visibility: `class:${teacherClasses[0]?.id}`,
+                visibility: `class:${selectedClass?.id}`,
             });
             setAnnouncements(prev => [...prev, data]);
             setShowAnnForm(false);
@@ -115,7 +123,7 @@ export const TeacherDashboard = ({ onLogout }) => {
         try {
             const { data } = await axiosInstance.post("/events", {
                 ...eventData,
-                classId: teacherClasses[0]?.id,
+                classId: selectedClass?.id,
             });
             setEvents(prev => [...prev, data]);
             setShowEventForm(false);
@@ -150,12 +158,29 @@ export const TeacherDashboard = ({ onLogout }) => {
         }
     };
 
-    // === Tab Content Mapping ===
+    // === Render Tab Content ===
     const renderTabContent = () => {
+        if (dashboardLoading) {
+            return (
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            );
+        }
+
+        if (teacherClasses.length === 0) {
+            return (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-6 rounded-lg text-center">
+                    <p className="text-lg font-semibold mb-2">No Classes Assigned</p>
+                    <p className="text-sm">Contact your admin to assign you as a class teacher or subject teacher.</p>
+                </div>
+            );
+        }
+
         const commonProps = {
             teacherClasses,
             students,
-            attendance,
+            attendance: attendance[selectedClass?.id] || [],
             contactMessages,
             events,
             announcements,
@@ -177,6 +202,7 @@ export const TeacherDashboard = ({ onLogout }) => {
                         onAddEvent={() => setShowEventForm(true)}
                         onAddAnnouncement={() => setShowAnnForm(true)}
                         onAddContact={() => setShowContactForm(true)}
+                        statistics={statistics}
                     />
                 );
             case "classes":
@@ -196,32 +222,9 @@ export const TeacherDashboard = ({ onLogout }) => {
         }
     };
 
-    // === Loading / No Classes ===
-    if (dashboardLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-100">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            </div>
-        );
-    }
-
-    if (!teacherClasses.length) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen bg-gray-100 text-center p-4">
-                <p className="text-xl lg:text-2xl text-gray-600 mb-4">No classes assigned.</p>
-                <button
-                    onClick={onLogout}
-                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                    Logout
-                </button>
-            </div>
-        );
-    }
-
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden">
-            {/* Sidebar */}
+            {/* === SIDEBAR: ALWAYS VISIBLE === */}
             <TSidebar
                 user={user}
                 teacherClasses={teacherClasses}
@@ -234,12 +237,10 @@ export const TeacherDashboard = ({ onLogout }) => {
                 onLogout={onLogout}
             />
 
-            {/* Main Content */}
+            {/* === MAIN CONTENT === */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Mobile Header */}
                 <THeader title="Teacher Dashboard" onMenuClick={() => setIsSidebarOpen(true)} />
 
-                {/* Content Area */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-gray-50">
                     {renderTabContent()}
                 </main>
@@ -247,24 +248,15 @@ export const TeacherDashboard = ({ onLogout }) => {
 
             {/* === MODALS === */}
             <Modal open={showAnnForm} title="Create Announcement" onClose={() => setShowAnnForm(false)}>
-                <AnnouncementForm
-                    onCreate={handleAddAnnouncement}
-                    onClose={() => setShowAnnForm(false)}
-                />
+                <AnnouncementForm onCreate={handleAddAnnouncement} onClose={() => setShowAnnForm(false)} />
             </Modal>
 
             <Modal open={showEventForm} title="Create Event" onClose={() => setShowEventForm(false)}>
-                <EventForm
-                    onCreate={handleAddEvent}
-                    onClose={() => setShowEventForm(false)}
-                />
+                <EventForm onCreate={handleAddEvent} onClose={() => setShowEventForm(false)} />
             </Modal>
 
             <Modal open={showContactForm} title="Send Message" onClose={() => setShowContactForm(false)}>
-                <AddContactMessageForm
-                    onCreate={handleAddContactMessage}
-                    onClose={() => setShowContactForm(false)}
-                />
+                <AddContactMessageForm onCreate={handleAddContactMessage} onClose={() => setShowContactForm(false)} />
             </Modal>
 
             <Modal
