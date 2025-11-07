@@ -1,3 +1,4 @@
+// models/Class.js
 import mongoose from "mongoose";
 
 const classSchema = new mongoose.Schema(
@@ -9,6 +10,14 @@ const classSchema = new mongoose.Schema(
       ref: "Teacher",
     },
     subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
+
+    // ADD THIS FIELD
+    subjectTeachers: [
+      {
+        teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
+        subjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -3,129 +3,116 @@ import Teacher from "../models/Teacher.js";
 import User from "../models/User.js";
 import Student from "../models/Student.js";
 import Class from "../models/Class.js";
-import Subject from "../models/Subject.js";
 import Announcement from "../models/Announcement.js";
 import Event from "../models/Event.js";
 import Exam from "../models/Exam.js";
 import Timetable from "../models/Timetable.js";
 import Attendance from "../models/Attendance.js";
-import Progress from "../models/Progress.js";
 import ContactMessage from "../models/ContactMessage.js";
 
 export const getTeacherDashboard = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Get teacher with populated fields
     const teacher = await Teacher.findOne({ userId })
-      .populate({
-        path: "userId",
-        select: "name email phone ",
-      })
-      .populate({
-        path: "subjects",
-        select: "name code",
-      });
+      .populate("userId", "name email phone")
+      .populate("subjects", "name");
 
-    if (!teacher) {
-      return res.status(404).json({ message: "Teacher not found" });
-    }
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
-    // Get all classes where this teacher is the class teacher or teaches a subject
+    // FIX 1: Find classes where teacher is in subjectTeachers OR classTeacher
+    // In getTeacherDashboard
     const teacherClasses = await Class.find({
       $or: [
         { classTeacherId: teacher._id },
-        { subjects: { $in: teacher.subjects } },
+        { "subjectTeachers.teacherId": teacher._id },
       ],
-    }).populate("subjects", "name code");
+    }).populate("subjects", "name");
 
-    // Get all students in teacher's classes
     const classIds = teacherClasses.map((c) => c._id);
-    const students = await Student.find({
+
+    // Students
+    const students = await Student.find({ classId: { $in: classIds } })
+      .populate("userId", "name email")
+      .populate("classId", "name section");
+
+    // FIX 2: Attendance by class + date (aggregated)
+    const attendanceRecords = await Attendance.find({
       classId: { $in: classIds },
-    })
-      .populate({
-        path: "userId",
-        select: "name email phone profilePic",
-      })
-      .populate({
-        path: "classId",
-        select: "name section",
+    });
+    const attendanceByClass = {};
+
+    teacherClasses.forEach((cls) => {
+      const classIdStr = cls._id.toString();
+      const records = attendanceRecords.filter(
+        (r) => r.classId.toString() === classIdStr
+      );
+
+      const dailyMap = {};
+      records.forEach((r) => {
+        const dateStr = r.date.toISOString().split("T")[0];
+        if (!dailyMap[dateStr]) dailyMap[dateStr] = { present: 0, total: 0 };
+        dailyMap[dateStr].present += r.present || 0;
+        dailyMap[dateStr].total += r.total || 1;
       });
 
-    // Calculate attendance and average scores for each student
-    const studentsWithStats = await Promise.all(
-      students.map(async (student) => {
-        // Get attendance records
-        const attendanceRecords = await Attendance.find({
-          studentId: student._id,
-        });
-        const totalDays = attendanceRecords.length;
-        const presentDays = attendanceRecords.filter(
-          (a) => a.status === "present"
-        ).length;
-        const attendancePercentage =
-          totalDays > 0
-            ? parseFloat(((presentDays / totalDays) * 100).toFixed(1))
-            : 0;
+      attendanceByClass[classIdStr] = Object.entries(dailyMap)
+        .map(([date, d]) => ({
+          date,
+          present: d.present,
+          total: d.total,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    });
 
-        // Get academic progress
-        const progressRecords = await Progress.find({
-          studentId: student._id,
-          type: "academic",
-          score: { $exists: true },
-        });
-        const avgScore =
-          progressRecords.length > 0
-            ? parseFloat(
-                (
-                  progressRecords.reduce((sum, p) => sum + (p.score || 0), 0) /
-                  progressRecords.length
-                ).toFixed(1)
-              )
-            : 0;
-
-        return {
-          id: student._id,
-          name: student.userId?.name || "N/A",
-          email: student.userId?.email,
-          roll: student.rollNumber,
-          classId: student.classId._id,
-          className: student.classId?.name || "N/A",
-          section: student.classId?.section || "",
-          attendance: attendancePercentage,
-          avgScore: avgScore,
-          avatar: student.userId?.profilePic || null,
-        };
-      })
+    // Exams
+    const exams = await Exam.find({ classId: { $in: classIds } }).populate(
+      "classId",
+      "name section"
     );
 
-    // Get teacher's timetable
-    const timetableEntries = await Timetable.find({
-      teacherId: teacher._id,
-    })
-      .populate({
-        path: "subjectId",
-        select: "name code",
-      })
-      .populate({
-        path: "classId",
-        select: "name section",
-      })
-      .sort({ day: 1, period: 1 });
+    // FIX 3: Exam results with subject-wise averages
+    const examResults = exams.map((exam) => {
+      const results = exam.results || [];
+      const subject = exam.subject;
+      const totalMarks = results.reduce(
+        (sum, r) => sum + (r.marksObtained || 0),
+        0
+      );
+      const avg =
+        results.length > 0 ? Math.round(totalMarks / results.length) : 0;
 
-    // Format timetable into schedule object by day
+      return {
+        examId: exam._id,
+        examTitle: exam.title,
+        classId: exam.classId._id,
+        className: `${exam.classId.name} ${exam.classId.section || ""}`.trim(),
+        subject: exam.subject,
+        date: exam.date,
+        averageMarks: avg,
+        studentCount: results.length,
+        results: results.map((r) => ({
+          studentId: r.studentId,
+          marksObtained: r.marksObtained,
+          grade: r.grade,
+        })),
+      };
+    });
+
+    // Timetable
+    const timetableEntries = await Timetable.find({ teacherId: teacher._id })
+      .populate("subjectId", "name")
+      .populate("classId", "name section");
+
     const schedule = {};
-    const days = [
+    [
       "Monday",
       "Tuesday",
       "Wednesday",
       "Thursday",
       "Friday",
       "Saturday",
-    ];
-
-    days.forEach((day) => {
+    ].forEach((day) => {
       schedule[day] = timetableEntries
         .filter((t) => t.day === day)
         .sort((a, b) => a.period - b.period)
@@ -141,78 +128,20 @@ export const getTeacherDashboard = async (req, res) => {
         }));
     });
 
-    // Get announcements (teacher's own + public)
+    // Announcements, Events, Messages
     const announcements = await Announcement.find({
       $or: [
         { visibility: "public" },
         { visibility: { $in: classIds.map((id) => `class:${id}`) } },
-        { visibility: { $exists: false } },
       ],
     })
       .sort({ date: -1 })
       .limit(20);
 
-    // Get events for teacher's classes
     const events = await Event.find({
-      $or: [
-        { public: true },
-        { classId: { $in: classIds } },
-        { classId: { $exists: false } },
-      ],
+      $or: [{ public: true }, { classId: { $in: classIds } }],
     }).sort({ date: 1 });
 
-    // Get exams for teacher's classes
-    const exams = await Exam.find({
-      classId: { $in: classIds },
-    })
-      .populate("classId", "name section")
-      .sort({ date: 1 });
-
-    // Get exam results grouped by exam
-    const examResults = await Promise.all(
-      exams.map(async (exam) => {
-        const results = exam.results || [];
-        return {
-          examId: exam._id,
-          examTitle: exam.title,
-          classId: exam.classId._id,
-          className: `${exam.classId.name} ${
-            exam.classId.section || ""
-          }`.trim(),
-          date: exam.date,
-          subject: exam.subject,
-          results: results.map((r) => ({
-            studentId: r.studentId,
-            marksObtained: r.marksObtained,
-            grade: r.grade,
-          })),
-        };
-      })
-    );
-
-    // Get attendance records for all classes
-    const attendanceRecords = await Attendance.find({
-      classId: { $in: classIds },
-    }).sort({ date: -1 });
-
-    // Group attendance by class and date
-    const attendanceByClass = {};
-    classIds.forEach((classId) => {
-      const classRecords = attendanceRecords.filter(
-        (a) => a.classId.toString() === classId.toString()
-      );
-
-      attendanceByClass[classId] = classRecords.map((record) => ({
-        id: record._id,
-        classId: record.classId,
-        date: record.date,
-        present: record.present || 0,
-        total: record.total || 0,
-        status: record.status,
-      }));
-    });
-
-    // Get contact messages
     const contactMessages = await ContactMessage.find({
       $or: [
         { teacherId: teacher._id },
@@ -221,23 +150,21 @@ export const getTeacherDashboard = async (req, res) => {
     })
       .populate({
         path: "studentId",
-        populate: {
-          path: "userId",
-          select: "name",
-        },
+        populate: { path: "userId", select: "name" },
       })
       .sort({ date: -1 });
 
-    // Calculate statistics
-    const totalStudents = studentsWithStats.length;
-
+    // Stats
+    const totalStudents = students.length;
     const avgAttendance =
-      studentsWithStats.length > 0
-        ? parseFloat(
-            (
-              studentsWithStats.reduce((sum, s) => sum + s.attendance, 0) /
-              studentsWithStats.length
-            ).toFixed(1)
+      totalStudents > 0
+        ? Math.round(
+            students.reduce((sum, s) => {
+              const att = attendanceByClass[s.classId.toString()] || [];
+              const total = att.reduce((a, b) => a + b.total, 0);
+              const present = att.reduce((a, b) => a + b.present, 0);
+              return sum + (total > 0 ? (present / total) * 100 : 0);
+            }, 0) / totalStudents
           )
         : 0;
 
@@ -247,35 +174,39 @@ export const getTeacherDashboard = async (req, res) => {
       inquiry: contactMessages.filter((m) => m.type === "inquiry").length,
     };
 
-    const today = new Date().toISOString().split("T")[0];
-    const upcomingEventsCount = events.filter(
-      (e) => new Date(e.date).toISOString().split("T")[0] >= today
+    const upcomingEvents = events.filter(
+      (e) => new Date(e.date) >= new Date()
     ).length;
 
-    // Format response
-    const dashboardData = {
+    res.json({
       teacher: {
         id: teacher._id,
-        name: teacher.userId?.name || "N/A",
-        email: teacher.userId?.email || "N/A",
-        phone: teacher.userId?.phone,
-        subjects: teacher.subjects?.map((s) => s.name) || [],
+        name: teacher.userId.name,
+        email: teacher.userId.email,
+        phone: teacher.userId.phone,
+        subjects: teacher.subjects.map((s) => s.name),
       },
+      // In the res.json({ classes: ... }) section
       classes: teacherClasses.map((c) => ({
         id: c._id,
         name: c.name,
-        section: c.section || "",
-        teacherId: c.classTeacherId,
-        subjects: c.subjects?.map((s) => ({ id: s._id, name: s.name })) || [],
-        studentCount: studentsWithStats.filter(
-          (s) => s.classId.toString() === c._id.toString()
+        section: c.section,
+        classTeacherId: c.classTeacherId, // ADD THIS
+        subjectTeachers: c.subjectTeachers || [], // ADD THIS
+        subjects: c.subjects.map((s) => ({ id: s._id, name: s.name })),
+        studentCount: students.filter(
+          (s) => s.classId._id.toString() === c._id.toString()
         ).length,
       })),
-      students: studentsWithStats,
-      timetable: {
-        teacherId: teacher._id,
-        schedule: schedule,
-      },
+      students: students.map((s) => ({
+        id: s._id,
+        name: s.userId.name,
+        email: s.userId.email,
+        classId: s.classId._id,
+        className: s.classId.name,
+        section: s.classId.section,
+      })),
+      timetable: { teacherId: teacher._id, schedule },
       announcements: announcements.map((a) => ({
         id: a._id,
         title: a.title,
@@ -288,21 +219,20 @@ export const getTeacherDashboard = async (req, res) => {
         title: e.title,
         content: e.content,
         date: e.date,
-        classId: e.classId,
         public: e.public,
+        classId: e.classId,
       })),
-      exams: exams.map((ex) => ({
-        id: ex._id,
-        title: ex.title,
-        classId: ex.classId._id,
-        className: `${ex.classId.name} ${ex.classId.section || ""}`.trim(),
-        subject: ex.subject,
-        date: ex.date,
-        duration: ex.duration,
-        totalMarks: ex.totalMarks,
-        room: ex.room,
+      exams: exams.map((e) => ({
+        id: e._id,
+        title: e.title,
+        classId: e.classId._id,
+        className: `${e.classId.name} ${e.classId.section || ""}`.trim(),
+        subject: e.subject,
+        date: e.date,
+        duration: e.duration,
+        room: e.room,
       })),
-      examResults: examResults,
+      examResults,
       attendance: attendanceByClass,
       contactMessages: contactMessages.map((m) => ({
         id: m._id,
@@ -317,18 +247,12 @@ export const getTeacherDashboard = async (req, res) => {
         totalStudents,
         avgAttendance,
         complaints: contactStats.complaint,
-        upcomingEvents: upcomingEventsCount,
+        upcomingEvents,
         contactStats,
       },
-    };
-
-    res.json(dashboardData);
+    });
   } catch (error) {
     console.error("Teacher Dashboard error:", error);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
