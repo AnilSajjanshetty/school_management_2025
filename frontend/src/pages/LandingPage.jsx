@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../config/axiosInstance";
+import { useRef } from "react";
 
 export const LandingPage = ({ onEnter, data }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -71,58 +72,55 @@ export const LandingPage = ({ onEnter, data }) => {
         setFormData({ name: "", email: "", password: "", role: "student" });
     };
 
+    const successRef = useRef(null);
+    const errorRef = useRef(null);
+
+    // Auto-scroll to success
+    useEffect(() => {
+        if (contactSuccess) {
+            successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [contactSuccess]);
+    useEffect(() => {
+        if (contactError) {
+            errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [contactError]);
+
     const handleContactSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // ← CRITICAL
+
+        if (contactLoading) return;
+
         setContactLoading(true);
-        setContactError("");
         setContactSuccess(false);
+        setContactError("");
 
         try {
-            // Prepare contact data for guest user (no studentId/teacherId)
             const contactData = {
                 senderName: contactForm.name,
                 senderEmail: contactForm.email,
-                senderPhone: contactForm.phone || undefined, // Optional field
+                senderPhone: contactForm.phone || undefined,
                 type: contactForm.type,
                 subject: contactForm.subject,
                 message: contactForm.message,
             };
 
-            // Send contact message to backend
-            const response = await axiosInstance.post('/contactMessage', contactData);
+            await axiosInstance.post('/contactMessage', contactData);
 
-            console.log('Contact message sent:', response.data);
-
-            // Show success message
+            // SUCCESS
             setContactSuccess(true);
-
-            // Reset form
             setContactForm({
-                name: "",
-                email: "",
-                phone: "",
-                type: "inquiry",
-                subject: "",
-                message: ""
+                name: "", email: "", phone: "", type: "inquiry", subject: "", message: ""
             });
 
-            // Hide success message after 5 seconds
-            setTimeout(() => {
-                setContactSuccess(false);
-            }, 5000);
+            // Hide after 5s
+            setTimeout(() => setContactSuccess(false), 5000);
 
         } catch (error) {
-            console.error('Error sending contact message:', error);
-            setContactError(
-                error.response?.data?.message ||
-                error.message ||
-                'Failed to send message. Please try again.'
-            );
-
-            // Hide error message after 5 seconds
-            setTimeout(() => {
-                setContactError("");
-            }, 5000);
+            const msg = error.response?.data?.message || "Failed to send message.";
+            setContactError(msg);
+            setTimeout(() => setContactError(""), 5000);
         } finally {
             setContactLoading(false);
         }
@@ -130,10 +128,7 @@ export const LandingPage = ({ onEnter, data }) => {
 
     const handleContactChange = (e) => {
         const { name, value } = e.target;
-        setContactForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setContactForm(prev => ({ ...prev, [name]: value }));
     };
 
     return (
@@ -568,47 +563,12 @@ export const LandingPage = ({ onEnter, data }) => {
                         </motion.h2>
                         <div className="grid lg:grid-cols-2 gap-12">
                             <motion.form
+
                                 initial={{ opacity: 0, x: -50 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 onSubmit={handleContactSubmit}
                                 className="space-y-6"
                             >
-                                {/* Success Message */}
-                                <AnimatePresence>
-                                    {contactSuccess && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                                            className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-2xl p-6 flex items-start gap-4 shadow-lg"
-                                        >
-                                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <Check className="w-7 h-7 text-white" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="font-bold text-xl text-green-800 mb-1">Message Sent Successfully! 🎉</p>
-                                                <p className="text-green-700 leading-relaxed">
-                                                    Thank you for reaching out! We've received your message and our team will get back to you within 24-48 hours.
-                                                </p>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* Error Message */}
-                                <AnimatePresence>
-                                    {contactError && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                                            className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-500 rounded-2xl p-6 shadow-lg"
-                                        >
-                                            <p className="font-bold text-xl text-red-800 mb-1">Oops! Something went wrong</p>
-                                            <p className="text-red-700">{contactError}</p>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
 
                                 {/* Gradient Border Wrapper */}
                                 <div className="bg-gradient-to-br from-violet-600 to-pink-600 p-1 rounded-3xl">
@@ -699,6 +659,44 @@ export const LandingPage = ({ onEnter, data }) => {
                                                 </>
                                             )}
                                         </motion.button>
+                                        {/* Success Message */}
+                                        <AnimatePresence>
+                                            {contactSuccess && (
+                                                <motion.div
+                                                    ref={successRef}
+                                                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-2xl p-6 flex items-start gap-4 shadow-lg"
+                                                >
+                                                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <Check className="w-7 h-7 text-white" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="font-bold text-xl text-green-800 mb-1">Message Sent Successfully! 🎉</p>
+                                                        <p className="text-green-700 leading-relaxed">
+                                                            Thank you for reaching out! We've received your message and our team will get back to you within 24-48 hours.
+                                                        </p>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Error Message */}
+                                        <AnimatePresence>
+                                            {contactError && (
+                                                <motion.div
+                                                    ref={errorRef}
+                                                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-500 rounded-2xl p-6 shadow-lg"
+                                                >
+                                                    <p className="font-bold text-xl text-red-800 mb-1">Oops! Something went wrong</p>
+                                                    <p className="text-red-700">{contactError}</p>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </div>
                             </motion.form>
