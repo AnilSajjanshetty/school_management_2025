@@ -24,6 +24,12 @@ app.use(cors());
 app.use(express.json());
 connectDB();
 
+app.get("/", (req, res) => {
+  res.send(
+    "🚀 School Management Backend API is running successfully on Vercel!"
+  );
+});
+
 // Routes
 app.use("/api", authRoutes);
 app.use("/api/users", userRoutes);
