@@ -8,6 +8,9 @@ import {
   getAnnouncements,
   getEvents,
   getTeacherExams,
+  getMessages,
+  sendMessage,
+  replyToMessage,
 } from "../controllers/classTeacherDashboardController.js"; // ← keep the controller file name unchanged
 import { authorize } from "../middleware/auth.js";
 
@@ -65,5 +68,14 @@ router.get(
 
   getTeacherExams
 );
+
+// 💬 Get all messages for a teacher
+router.get("/messages/:teacherId", getMessages);
+
+// ✉️ Send a new message
+router.post("/messages", sendMessage);
+
+// 🔁 Reply to an existing message
+router.put("/messages/reply/:messageId", replyToMessage);
 
 export default router;

@@ -514,3 +514,111 @@ export const getTeacherExams = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+import ContactMessage from "../models/ContactMessage.js";
+
+/**
+ * @desc Get all messages related to a teacher
+ * @route GET /api/clasteacher/messages/:teacherId
+ */
+export const getMessages = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const messages = await ContactMessage.find({
+      $or: [{ teacherId }],
+    })
+      .populate("studentId", "name email")
+      .populate("teacherId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(messages);
+  } catch (error) {
+    console.error("Error fetching teacher messages:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc Send a message (student or teacher)
+ * @route POST /api/clasteacher/messages
+ * @body { senderId, receiverId, message, subject, type }
+ */
+export const sendMessage = async (req, res) => {
+  try {
+    const {
+      studentId,
+      teacherId,
+      senderName,
+      senderEmail,
+      senderPhone,
+      subject,
+      message,
+      type,
+    } = req.body;
+
+    if (!message || !type) {
+      return res.status(400).json({ message: "Message and type are required" });
+    }
+
+    const newMessage = new ContactMessage({
+      studentId: studentId || null,
+      teacherId: teacherId || null,
+      senderName,
+      senderEmail,
+      senderPhone,
+      subject,
+      message,
+      type,
+    });
+
+    const saved = await newMessage.save();
+    const populated = await saved.populate([
+      { path: "studentId", select: "name email" },
+      { path: "teacherId", select: "name email" },
+    ]);
+
+    res.status(201).json(populated);
+  } catch (error) {
+    console.error("Error sending message:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc Reply to a message
+ * @route PUT /api/clasteacher/messages/reply/:messageId
+ * @body { reply, repliedBy }
+ */
+export const replyToMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { reply, repliedBy } = req.body;
+
+    if (!reply) {
+      return res.status(400).json({ message: "Reply text is required" });
+    }
+
+    const message = await ContactMessage.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    message.reply = reply;
+    message.repliedAt = new Date();
+    message.repliedBy = repliedBy;
+    message.status = "resolved";
+    await message.save();
+
+    const populated = await message.populate([
+      { path: "studentId", select: "name email" },
+      { path: "teacherId", select: "name email" },
+      { path: "repliedBy", select: "name email" },
+    ]);
+
+    res.status(200).json(populated);
+  } catch (error) {
+    console.error("Error replying to message:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -7,6 +7,7 @@ import {
   Megaphone,
   Calendar,
   FileText,
+  MessageSquare,
 } from "lucide-react";
 
 export const navItems = [
@@ -17,4 +18,5 @@ export const navItems = [
   { tab: "announcements", icon: Megaphone, label: "Announcements" },
   { tab: "events", icon: Calendar, label: "Events" },
   { tab: "exams", icon: FileText, label: "Exams" },
+  { tab: "messages", icon: MessageSquare, label: "Messages" },
 ];

@@ -1,9 +1,8 @@
-// pages/ClassTeacherDashboardPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Menu, Bell } from 'lucide-react';
 import axiosInstance from '../config/axiosInstance';
 
-// Import components
+// Components
 import { CTSideNavbar } from '../components/ClassTeacherDashboard/CTSideNavbar';
 import { CTOverviewTab } from '../components/ClassTeacherDashboard/CTOverviewTab';
 import { CTMyClassTab } from '../components/ClassTeacherDashboard/CTMyClassTab';
@@ -15,6 +14,7 @@ import { CTExamsTab } from '../components/ClassTeacherDashboard/CTExamsTab';
 import { CTLoadingState } from '../components/ClassTeacherDashboard/CTLoadingState';
 import { CTErrorState } from '../components/ClassTeacherDashboard/CTErrorState';
 import { CTHeader } from '../components/ClassTeacherDashboard/CTHeader';
+import { CTMessages } from '../components/ClassTeacherDashboard/CTMessagesTab';
 
 export const ClassTeacherDashboard = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -23,7 +23,6 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const [error, setError] = useState(null);
     const userId = localStorage.getItem("userId");
 
-    // Data states
     const [dashboardData, setDashboardData] = useState(null);
     const [myClassData, setMyClassData] = useState(null);
     const [teachingClassesData, setTeachingClassesData] = useState([]);
@@ -32,7 +31,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
     const [eventsData, setEventsData] = useState([]);
     const [examsData, setExamsData] = useState([]);
 
-    // Fetch functions
+    // Fetchers
     const fetchers = {
         overview: async () => {
             const res = await axiosInstance.get(`/classTeacher/dashboard/${userId}`);
@@ -68,7 +67,7 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
         setLoading(true);
         setError(null);
         try {
-            await fetchers[activeTab]();
+            await fetchers[activeTab]?.();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to load data');
         } finally {
@@ -94,13 +93,13 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
             case 'announcements': return <CTAnnouncementsTab data={announcementsData} />;
             case 'events': return <CTEventsTab data={eventsData} />;
             case 'exams': return <CTExamsTab data={examsData} />;
+            case 'messages': return <CTMessages userId={userId} />;
             default: return null;
         }
     };
 
     return (
         <div className="flex h-screen bg-gray-50">
-            {/* Sidebar */}
             <CTSideNavbar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -112,13 +111,11 @@ export const ClassTeacherDashboard = ({ onLogout }) => {
                 onLogout={onLogout}
             />
 
-            {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <CTHeader
                     activeTab={activeTab}
                     onMenuClick={() => setIsSidebarOpen(true)}
                 />
-
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-gray-50">
                     {renderContent()}
                 </main>
