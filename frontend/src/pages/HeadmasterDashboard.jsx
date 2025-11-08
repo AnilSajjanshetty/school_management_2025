@@ -22,6 +22,7 @@ import { HExams } from "../components/HeadmasterDashboard/HExams";
 import { HTestimonials } from "../components/HeadmasterDashboard/HTestimonials";
 import { HContactMessages } from "../components/HeadmasterDashboard/HContactMessages";
 import { HSideNavbar } from "../components/HeadmasterDashboard/HSideNavbar";
+import { HTimetables } from "../components/HeadmasterDashboard/HTimetables";
 
 export const HeadmasterDashboard = ({ onLogout }) => {
     const [classes, setClasses] = useState([]);
@@ -76,10 +77,10 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                     axiosInstance.get("/announcements").catch(() => ({ data: [] })),
                     axiosInstance.get("/events").catch(() => ({ data: [] })),
                     axiosInstance.get("/testimonials").catch(() => ({ data: [] })),
-                    axiosInstance.get("/timetables").catch(() => ({ data: [] })),
+                    axiosInstance.get("/timetables/all-classes").catch(() => ({ data: [] })),
                     axiosInstance.get("/exams").catch(() => ({ data: [] })),
                     axiosInstance.get("/progress").catch(() => ({ data: [] })),
-                    axiosInstance.get("/contact").catch(() => ({ data: [] })),
+                    axiosInstance.get("/contactMessage").catch(() => ({ data: [] })),
                 ]);
 
                 setClasses(classRes.data || []);
@@ -89,7 +90,7 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                 setAnnouncements(announcementRes.data || []);
                 setEvents(eventRes.data || []);
                 setTestimonials(testimonialRes.data || []);
-                setTimetables(timetableRes.data || []);
+                setTimetables(timetableRes.data.data || []);
                 setExams(examRes.data || []);
                 setExamResults(examResultRes.data || []);
                 setContactMessages(contactRes.data || []);
@@ -169,7 +170,7 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                             teachers={teachers}
                             events={events}
                             announcements={announcements}
-                            contactMessages={contactMessages}
+                            contactMessages={contactMessages?.data}
                             testimonials={testimonials}
                             attendance={attendance}
                             exams={exams}
@@ -226,7 +227,9 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                             onAddClick={() => setShowExamForm(true)}
                         />
                     )}
-
+                    {view === "timetables" && (
+                        <HTimetables timetables={timetables} onAddClick={() => setShowTTForm(true)} />
+                    )}
                     {view === "testimonials" && (
                         <HTestimonials
                             testimonials={testimonials}
@@ -235,7 +238,7 @@ export const HeadmasterDashboard = ({ onLogout }) => {
                     )}
 
                     {view === "contacts" && (
-                        <HContactMessages contactMessages={contactMessages} />
+                        <HContactMessages contactMessages={contactMessages?.data} />
                     )}
                 </main>
             </div>

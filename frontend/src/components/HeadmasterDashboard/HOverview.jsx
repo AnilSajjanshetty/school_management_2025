@@ -28,7 +28,7 @@ export const HOverview = ({
 
     const contactStats = useMemo(() => {
         const stats = { feedback: 0, complaint: 0, inquiry: 0 };
-        contactMessages.forEach(m => m.type && stats[m.type] !== undefined && stats[m.type]++);
+        contactMessages?.forEach(m => m.type && stats[m.type] !== undefined && stats[m.type]++);
         return stats;
     }, [contactMessages]);
 

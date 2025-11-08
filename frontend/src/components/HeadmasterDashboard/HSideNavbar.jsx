@@ -42,7 +42,7 @@ export const HSideNavbar = ({ setSelectedClassId, setView, closeSidebar, view, u
                     { label: "Events", view: "events" },
                     { label: "Testimonials", view: "testimonials" },
                     { label: "Exams", view: "exams" },
-                    { label: "Timetable", view: "timetable" },
+                    { label: "Timetable", view: "timetables" },
                     { label: "Contact Messages", view: "contacts" },
                 ].map((item) => (
                     <button
@@ -53,8 +53,8 @@ export const HSideNavbar = ({ setSelectedClassId, setView, closeSidebar, view, u
                             closeSidebar();
                         }}
                         className={`w-full text-left px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg transition-all font-medium text-sm lg:text-base ${view === item.view
-                                ? "bg-indigo-700 shadow-md"
-                                : "hover:bg-indigo-700"
+                            ? "bg-indigo-700 shadow-md"
+                            : "hover:bg-indigo-700"
                             }`}
                     >
                         {item.label}

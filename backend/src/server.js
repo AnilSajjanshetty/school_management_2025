@@ -16,6 +16,7 @@ import progressRoutes from "./routes/progress.js";
 import connectDB from "./config/db.js";
 import studentDashboardRoutes from "./routes/studentRoutes.js";
 import clasteacherRoutes from "./routes/clasteacher.js";
+import contactRoutes from "./routes/contact.js";
 dotenv.config();
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/api/timetables", timetableRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/contactMessage", contactRoutes);
 app.use("/api/students/dashboard", studentDashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
