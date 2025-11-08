@@ -277,7 +277,7 @@ export const LandingPage = ({ onEnter, data }) => {
                                 onClick={() => navigate("/login")}
                                 className="group px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl shadow-2xl font-bold text-lg flex items-center justify-center gap-2 relative overflow-hidden"
                             >
-                                <span className="relative z-10">Student Portal</span>
+                                <span className="relative z-10">Login</span>
                                 <ChevronRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                             </motion.button>
@@ -285,10 +285,13 @@ export const LandingPage = ({ onEnter, data }) => {
                             <motion.button
                                 whileHover={{ scale: 1.05, boxShadow: "0 25px 40px rgba(236, 72, 153, 0.3)" }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => navigate("/login")}
+                                onClick={() => {
+                                    const contactSection = document.getElementById('contact');
+                                    contactSection?.scrollIntoView({ behavior: 'smooth' });
+                                }}
                                 className="px-8 py-4 bg-white/80 backdrop-blur-lg text-violet-700 border-2 border-violet-300 rounded-2xl shadow-xl font-bold text-lg"
                             >
-                                Parent Portal
+                                Contact Us
                             </motion.button>
                         </motion.div>
 
@@ -574,17 +577,19 @@ export const LandingPage = ({ onEnter, data }) => {
                                 <AnimatePresence>
                                     {contactSuccess && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            className="bg-green-50 border-2 border-green-500 rounded-2xl p-4 flex items-center gap-3"
+                                            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                            className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-2xl p-6 flex items-start gap-4 shadow-lg"
                                         >
-                                            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                                                <Check className="w-6 h-6 text-white" />
+                                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <Check className="w-7 h-7 text-white" />
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-green-800">Message Sent Successfully!</p>
-                                                <p className="text-sm text-green-700">We'll get back to you soon.</p>
+                                            <div className="flex-1">
+                                                <p className="font-bold text-xl text-green-800 mb-1">Message Sent Successfully! 🎉</p>
+                                                <p className="text-green-700 leading-relaxed">
+                                                    Thank you for reaching out! We've received your message and our team will get back to you within 24-48 hours.
+                                                </p>
                                             </div>
                                         </motion.div>
                                     )}
@@ -594,13 +599,13 @@ export const LandingPage = ({ onEnter, data }) => {
                                 <AnimatePresence>
                                     {contactError && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            className="bg-red-50 border-2 border-red-500 rounded-2xl p-4"
+                                            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                            className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-500 rounded-2xl p-6 shadow-lg"
                                         >
-                                            <p className="font-bold text-red-800">Error</p>
-                                            <p className="text-sm text-red-700">{contactError}</p>
+                                            <p className="font-bold text-xl text-red-800 mb-1">Oops! Something went wrong</p>
+                                            <p className="text-red-700">{contactError}</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

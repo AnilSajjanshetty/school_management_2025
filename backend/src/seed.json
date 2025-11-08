@@ -4,7 +4,6 @@
       "_id": "6730a5f2c5f8a1b001000001",
       "name": "Principal Sharma",
       "email": "principal@school.com",
-      "password": "@Anil1234",
       "role": "headmaster",
       "phone": "9876543210",
       "address": "Main Building Office"
@@ -13,7 +12,6 @@
       "_id": "6730a5f2c5f8a1b001000002",
       "name": "Ravi Kumar",
       "email": "ravi@school.com",
-      "password": "@Anil1234",
       "role": "teacher",
       "phone": "9876500000"
     },
@@ -21,63 +19,54 @@
       "_id": "6730a5f2c5f8a1b001000003",
       "name": "Priya Singh",
       "email": "priya@school.com",
-      "password": "@Anil1234",
       "role": "student"
     },
     {
       "_id": "6730a5f2c5f8a1b001000004",
       "name": "Arjun Mehta",
       "email": "arjun@school.com",
-      "password": "@Anil1234",
       "role": "teacher"
     },
     {
       "_id": "6730a5f2c5f8a1b001000005",
       "name": "Neha Gupta",
       "email": "neha@school.com",
-      "password": "@Anil1234",
       "role": "student"
     },
     {
       "_id": "6730a5f2c5f8a1b001000006",
       "name": "Admin User",
       "email": "admin@school.com",
-      "password": "@Anil1234",
       "role": "admin"
     },
     {
       "_id": "6730a5f2c5f8a1b001000007",
       "name": "Suresh Rao",
       "email": "suresh@school.com",
-      "password": "@Anil1234",
       "role": "class_teacher"
     },
     {
       "_id": "6730a5f2c5f8a1b001000008",
       "name": "Anita Desai",
       "email": "anita@school.com",
-      "password": "@Anil1234",
       "role": "class_teacher"
     },
     {
       "_id": "6730a5f2c5f8a1b001000010",
       "name": "Rohan Patel",
       "email": "rohan@school.com",
-      "password": "@Anil1234",
       "role": "student"
     },
     {
       "_id": "6730a5f2c5f8a1b001000011",
       "name": "Kavya Sharma",
       "email": "kavya@school.com",
-      "password": "@Anil1234",
       "role": "student"
     },
     {
       "_id": "6730a5f2c5f8a1b001000012",
       "name": "Aryan Joshi",
       "email": "aryan@school.com",
-      "password": "@Anil1234",
       "role": "student"
     }
   ],
